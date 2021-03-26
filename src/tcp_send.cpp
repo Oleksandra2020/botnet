@@ -20,9 +20,9 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
 // No data, just datagram
     char buffer[PCKT_LEN];
 // The size of the headers
-    struct ipheader *ip = (struct ipheader *) buffer;
-    struct tcpheader *tcp = (struct tcpheader *) (buffer + sizeof(struct ipheader));
-    struct sockaddr_in sin, din;
+    auto *ip = (struct ipheader *) buffer;
+    auto *tcp = (struct tcpheader *) (buffer + sizeof(struct ipheader));
+    struct sockaddr_in sin{}, din{};
     int one = 1;
     const int *val = &one;
 
@@ -30,8 +30,8 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
 
     if(argc != 5)
     {
-        printf("- Invalid parameters!!!\n");
-        printf("- Usage: <source hostname/IP> <source port> <target hostname/IP> <target port>\n");
+        std::cout << "- Invalid parameters!!!" << std::endl;
+        std::cout << "- Usage: <source hostname/IP> <source port> <target hostname/IP> <target port>" << std::endl;
         exit(-1);
     }
 
@@ -42,12 +42,12 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
         exit(-1);
     }
     else
-        printf("socket()-SOCK_RAW and tcp protocol is OK.\n");
+        std::cout << "socket()-SOCK_RAW and tcp protocol is OK." << std::endl;
 
 // The source is redundant, may be used later if needed
 // Address family
-    sin.sin_family = AF_INET;
-    din.sin_family = AF_INET;
+    sin.sin_family = PF_INET;
+    din.sin_family = PF_INET;
 // Source port, can be any, modify as needed
     sin.sin_port = htons(atoi(tcph_srcport));
     din.sin_port = htons(atoi(tcph_destport));
@@ -87,19 +87,19 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
 
 // Inform the kernel do not fill up the headers' structure, we fabricated our own
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//    if(setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
     if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR , val, sizeof(one)))
     {
         perror("setsockopt() error");
         exit(-1);
     }
     else
-        printf("setsockopt() is OK\n");
+        std::cout << "setsockopt() is OK" << std::endl;
 
-    printf("Using:::::Source IP: %s port: %u, Target IP: %s port: %u.\n", iph_sourceip, atoi(tcph_srcport), iph_destip, atoi(tcph_destport));
+    std::cout << "Using:::::Source IP:" << iph_sourceip << "port: "
+            << atoi(tcph_srcport) << ", Target IP: " << iph_destip
+            << "port: " << atoi(tcph_destport) << std::endl;
 
-// sendto() loop, send every 2 second for 50 counts
+// sendto() loop, send every 2 second for 20 counts
     unsigned int count;
     for(count = 0; count < 20; count++)
     {
@@ -110,8 +110,8 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
             exit(-1);
         }
         else
-            printf("Count #%u - sendto() is OK\n", count);
-        sleep(2);
+            std::cout << "Count #" << count << " - sendto() is OK" << std::endl;
+        sleep(1);
     }
     close(sd);
     return 0;

@@ -26,10 +26,10 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
 // No data/payload just datagram
     char buffer[PCKT_LEN];
 // Our own headers' structures
-    struct ipheader *ip = (struct ipheader *) buffer;
-    struct udpheader *udp = (struct udpheader *) (buffer + sizeof(struct ipheader));
+    auto *ip = (struct ipheader *) buffer;
+    auto *udp = (struct udpheader *) (buffer + sizeof(struct ipheader));
 // Source and destination addresses: IP and port
-    struct sockaddr_in sin, din;
+    struct sockaddr_in sin{}, din{};
     int one = 1;
     const int *val = &one;
 
@@ -37,14 +37,13 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
 
     if(argc != 5)
     {
-        printf("- Invalid parameters!!!\n");
-        printf("- Usage <source hostname/IP> <source port> <target hostname/IP> <target port>\n");
+        std::cout << "- Invalid parameters!!!" << std::endl;
+        std::cout << "- Usage: <source hostname/IP> <source port> <target hostname/IP> <target port>" << std::endl;
         exit(-1);
     }
 
 // Create a raw socket with UDP protocol
     sd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-//    sd = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
     if(sd < 0)
     {
         perror("socket() error");
@@ -52,7 +51,7 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
         exit(-1);
     }
     else
-        printf("socket() - Using SOCK_RAW socket and UDP protocol is OK.\n");
+        std::cout << "socket() - Using SOCK_RAW socket and UDP protocol is OK." << std::endl;
 
 // The source is redundant, may be used later if needed
 // The address family
@@ -89,19 +88,20 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
 // Inform the kernel do not fill up the packet structure. we will build our own...
 
 // !!!!!!!!!!!!!!!!!
-//    if(setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
-    if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR , val, sizeof(one)))
+    if(setsockopt(sd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
+//    if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR , val, sizeof(one)))
     {
         perror("setsockopt() error");
         exit(-1);
     }
     else
-        printf("setsockopt() is OK.\n");
+        std::cout << "setsockopt() is OK" << std::endl;
 
 // Send loop, send for every 2 second for 100 count
-    printf("Trying...\n");
-    printf("Using raw socket and UDP protocol\n");
-    printf("Using Source IP: %s port: %u, Target IP: %s port: %u.\n", iph_sourceip, atoi(udph_srcport), iph_destip, atoi(udph_destport));
+    std::cout << "Trying..." << std::endl;
+    std::cout << "Using raw socket and UDP protocol" << std::endl;
+    std::cout << "Using Source IP: " << iph_sourceip << "port: " << atoi(udph_srcport)
+              << ", Target IP: " << iph_destip << " port: ." <<  atoi(udph_destport) << std::endl;
 
     int count;
     for(count = 1; count <=20; count++)
@@ -114,7 +114,7 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
         }
         else
         {
-            printf("Count #%u - sendto() is OK.\n", count);
+            std::cout << "Count #" << count << " - sendto() is OK" << std::endl;
             sleep(2);
         }
     }
