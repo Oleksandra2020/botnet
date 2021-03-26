@@ -1,45 +1,25 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
+project(example_syn)
 
-set(PROJECT_NAME text_processing_1)
-project(${PROJECT_NAME}
-        VERSION 0.0.1
-        DESCRIPTION "botnet"
-        HOMEPAGE_URL ""
-        LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-set(PROJECT_SOURCE_DECLARATION_DIRECTORY ${PROJECT_SOURCE_DIR}/inc)
-set(PROJECT_SOURCE_DEFINITION_DIRECTORY ${PROJECT_SOURCE_DIR}/src)
-set(CLASSES_DIR ${PROJECT_SOURCE_DEFINITION_DIRECTORY}/classes)
-
-#====================================
-# Project source compilation
-include_directories(${PROJECT_SOURCE_DECLARATION_DIRECTORY})
+SET(Boost_USE_STATIC_LIBS OFF)
+SET(Boost_USE_MULTITHREAD ON)
 
 
-#====================================
-# Adding classes as shared libraries
-set(CLASSES_LIST)
+find_package( Boost REQUIRED COMPONENTS
+        filesystem locale system)
+find_library(TINS_LIBRARY tins)
 
-foreach(CLASS ${CLASSES_LIST})
-    add_library(${CLASS} SHARED ${CLASSES_DIR}/${CLASS}.cpp)
-    message("+- CLASS ('${CLASS}') WAS ADDED AS LIBRARY") 
-endforeach()
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
+add_library(tcp inc/tcp_send.h src/tcp_send.cpp)
+#target_include_directories(tcp inc)
 
-# Add main src file
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DEFINITION_DIRECTORY}/main.cpp)
-
-# Linking libraries to executable
-FOREACH(CLASS ${CLASSES_LIST})
-    TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${CLASS})
-    MESSAGE("*- '${CLASS}' library WAS LINKED TO EXECUTABLE") 
-ENDFOREACH()
+add_library(udp inc/udp_send.h src/udp_send.cpp)
+#target_include_directories(udp inc)
 
 
-#====================================
-# Add external libraries
-
-
-
+add_executable(example_syn src/main.cpp ${Boost_INCLUDE_DIR} )
+target_include_directories(example_syn PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(example_syn tcp udp ${Boost_LIBRARIES} tins)
