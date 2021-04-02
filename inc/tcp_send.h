@@ -12,6 +12,15 @@
 
 // Packet length
 #define PCKT_LEN 8192
+#define HEADER_LEN 5
+#define VERSION 4
+#define TYPE_OF_SERVICE 16
+#define IDENTIFIER 54321
+#define TIME_TO_LIVE 64
+#define TCP_OFFSET 5
+#define TCP_SYN 1
+#define TCP_WIN 32767
+
 
 struct ipheader {
     unsigned char      iph_ihl:5, /* Little-endian */

@@ -43,7 +43,7 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
     }
 
 // Create a raw socket with UDP protocol
-    sd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(sd < 0)
     {
         perror("socket() error");
@@ -66,13 +66,13 @@ int send_udp(const char* iph_sourceip, const char* udph_srcport, const char* iph
 
 // Fabricate the IP header or we can use the
 // standard header structures but assign our own values.
-    ip->iph_ihl = 5;
-    ip->iph_ver = 4;
-    ip->iph_tos = 16; // Low delay
+    ip->iph_ihl = HEADER_LEN;
+    ip->iph_ver = VERSION;
+    ip->iph_tos = TYPE_OF_SERVICE; // Low delay
     ip->iph_len = sizeof(struct ipheader) + sizeof(struct udpheader);
-    ip->iph_ident = htons(54321);
-    ip->iph_ttl = 64; // hops
-    ip->iph_protocol = 17; // UDP
+    ip->iph_ident = htons(IDENTIFIER);
+    ip->iph_ttl = TIME_TO_LIVE; // hops
+    ip->iph_protocol = IPPROTO_UDP; // UDP
 // Source IP address, can use spoofed address here!!!
     ip->iph_sourceip = inet_addr(iph_sourceip);
 // The destination IP address

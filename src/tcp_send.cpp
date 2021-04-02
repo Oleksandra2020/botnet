@@ -35,7 +35,7 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
         exit(-1);
     }
 
-    sd = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
+    sd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if(sd < 0)
     {
         perror("socket() error");
@@ -46,8 +46,8 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
 
 // The source is redundant, may be used later if needed
 // Address family
-    sin.sin_family = PF_INET;
-    din.sin_family = PF_INET;
+    sin.sin_family = AF_INET;
+    din.sin_family = AF_INET;
 // Source port, can be any, modify as needed
     sin.sin_port = htons(atoi(tcph_srcport));
     din.sin_port = htons(atoi(tcph_destport));
@@ -55,14 +55,14 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     sin.sin_addr.s_addr = inet_addr(iph_sourceip);
     din.sin_addr.s_addr = inet_addr(iph_destip);
 // IP structure
-    ip->iph_ihl = 5;
-    ip->iph_ver = 4;
-    ip->iph_tos = 16;
+    ip->iph_ihl = HEADER_LEN;
+    ip->iph_ver = VERSION;
+    ip->iph_tos = TYPE_OF_SERVICE;
     ip->iph_len = sizeof(struct ipheader) + sizeof(struct tcpheader);
-    ip->iph_ident = htons(54321);
+    ip->iph_ident = htons(IDENTIFIER);
     ip->iph_offset = 0;
-    ip->iph_ttl = 64;
-    ip->iph_protocol = 6; // TCP
+    ip->iph_ttl = TIME_TO_LIVE;
+    ip->iph_protocol = IPPROTO_TCP; // TCP
     ip->iph_chksum = 0; // Done by kernel
 
 // Source IP, modify as needed, spoofed, we accept through command line argument
@@ -76,10 +76,10 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     tcp->tcph_destport = htons(atoi(tcph_destport));
     tcp->tcph_seqnum = htonl(1);
     tcp->tcph_acknum = 0;
-    tcp->tcph_offset = 5;
-    tcp->tcph_syn = 1;
+    tcp->tcph_offset = TCP_OFFSET;
+    tcp->tcph_syn = TCP_SYN;
     tcp->tcph_ack = 0;
-    tcp->tcph_win = htons(32767);
+    tcp->tcph_win = htons(TCP_WIN);
     tcp->tcph_chksum = 0; // Done by kernel
     tcp->tcph_urgptr = 0;
 // IP checksum calculation
@@ -103,11 +103,16 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     unsigned int count;
     for(count = 0; count < 20; count++)
     {
-        if(sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin)) < 0)
+        int return_value = sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin));
+        if (return_value == ENOTCONN)
 // Verify
         {
-            perror("sendto() error");
-            exit(-1);
+            std::cout << "socket not connected" << std::endl;
+            exit(1);
+        } else if (return_value == EISCONN)
+        {
+            std::cout << "address is ignored" << std::endl;
+            exit(1);
         }
         else
             std::cout << "Count #" << count << " - sendto() is OK" << std::endl;
