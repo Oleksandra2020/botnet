@@ -14,12 +14,8 @@ find_library(TINS_LIBRARY tins)
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 add_library(tcp inc/tcp_send.h src/tcp_send.cpp)
-#target_include_directories(tcp inc)
-
-add_library(udp inc/udp_send.h src/udp_send.cpp)
-#target_include_directories(udp inc)
 
 
-add_executable(example_syn src/main.cpp ${Boost_INCLUDE_DIR} )
+add_executable(example_syn src/main.cpp ${Boost_INCLUDE_DIR} inc/thread_pool.h)
 target_include_directories(example_syn PUBLIC ${Boost_INCLUDE_DIR})
-target_link_libraries(example_syn tcp udp ${Boost_LIBRARIES} tins)
+target_link_libraries(example_syn tcp ${Boost_LIBRARIES} tins)

@@ -9,6 +9,7 @@
 #include <netinet/tcp.h>
 #include <iostream>
 #include <arpa/inet.h>
+#include <map>
 
 // Packet length
 #define PCKT_LEN 8192
@@ -60,7 +61,12 @@ struct tcpheader {
     unsigned short int tcph_urgptr;
 };
 
-int send_tcp(const char* iph_sourceip, const char* udph_srcport, const char* iph_destip, const char* udph_destport, int argc);
+struct conf_t {
+    std::map<std::pair<const char*, const char*>, std::pair<const char*, const char*> > src_dst;
+    int threads;
+};
+
+int send_tcp(const char* iph_sourceip, const char* udph_srcport, const char* iph_destip, const char* udph_destport);
 
 unsigned short csum(unsigned short *buf, int len);
 

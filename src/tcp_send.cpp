@@ -14,7 +14,8 @@ unsigned short csum(unsigned short *buf, int len)
     return (unsigned short)(~sum);
 }
 
-int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport, int argc)
+
+int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
 {
     int sd;
 // No data, just datagram
@@ -27,13 +28,6 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     const int *val = &one;
 
     memset(buffer, 0, PCKT_LEN);
-
-    if(argc != 5)
-    {
-        std::cout << "- Invalid parameters!!!" << std::endl;
-        std::cout << "- Usage: <source hostname/IP> <source port> <target hostname/IP> <target port>" << std::endl;
-        exit(-1);
-    }
 
     sd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if(sd < 0)
@@ -104,15 +98,11 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     for(count = 0; count < 20; count++)
     {
         int return_value = sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin));
-        if (return_value == ENOTCONN)
-// Verify
+        if (return_value < 0)
         {
-            std::cout << "socket not connected" << std::endl;
-            exit(1);
-        } else if (return_value == EISCONN)
-        {
-            std::cout << "address is ignored" << std::endl;
-            exit(1);
+            char buffer[256];
+            strerror_r(errno, buffer, 256);
+            std::cout << buffer << std::endl;
         }
         else
             std::cout << "Count #" << count << " - sendto() is OK" << std::endl;
