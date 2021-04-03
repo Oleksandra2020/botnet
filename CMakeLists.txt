@@ -53,7 +53,7 @@ find_package(Threads)
 target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
 # Boost.Asio
-find_package(Boost 1.75 REQUIRED COMPONENTS
+find_package(Boost 1.71 REQUIRED COMPONENTS
             system)       
 include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
