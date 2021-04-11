@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -18,24 +19,24 @@ namespace io = boost::asio;
 class session {
 	using tcp = io::ip::tcp;
 	using err = boost::system::error_code;
-	using on_msg_callback = std::function<void(std::string, session*)>;
+	using on_msg_callback = std::function<void(std::stringstream&, session*)>;
 	using on_err_callback = std::function<void()>;
 
     public:
-	session(tcp::socket&&);
+	session(tcp::socket&&, io::io_context&);
 
 	void start(on_msg_callback&& onMsg);
 	void stop();
 	void send(std::string const&);
 
+    private:
 	void read();
 	void write();
 	void onRead(err, std::size_t);
 	void onWrite(err, std::size_t);
-
-    private:
 	std::queue<std::string> msg_queue_;
 
+    io::io_context& io_context_;
 	tcp::socket socket_;
 	io::streambuf buffer_;
 	err error_code_;
@@ -43,7 +44,6 @@ class session {
 	on_msg_callback on_message_callback_;
 	on_err_callback on_error_callback_;
 
-    protected:
 };
 
 #endif	// SESSION_H

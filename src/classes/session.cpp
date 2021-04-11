@@ -1,6 +1,8 @@
-#include "../../inc/session.h"
+#include "session.h"
 
-session::session(tcp::socket&& sock) : socket_(std::move(sock)) {}
+#include <boost/asio/io_service.hpp>
+
+session::session(tcp::socket&& sock, io::io_service& io_context) : socket_(std::move(sock)), io_context_(io_context) {}
 
 void session::start(on_msg_callback&& handler_func) {
 	on_message_callback_ = std::move(handler_func);
@@ -15,14 +17,14 @@ void session::read() {
 
 void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
-    
+
 	if (!error_code) {
 		std::stringstream output;
 		output << std::istream(&buffer_).rdbuf();
 
 		buffer_.consume(bytes_transferred);
 
-		on_message_callback_(output.str(), this);
+		on_message_callback_(output, this);
 		read();
 	} else {
 		socket_.close(error_code);
@@ -30,6 +32,7 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 }
 
 void session::send(std::string const& data) {
+    // TODO: make it thread safe
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
 
@@ -54,8 +57,10 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 			write();
 		}
 	} else {
-		socket_.close(error_code);
+		stop();
 	}
 }
 
-void session::stop() { socket_.close(error_code_); }
+void session::stop() {
+	io_context_.post([this]() { socket_.close(error_code_); });
+}

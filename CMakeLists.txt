@@ -9,45 +9,27 @@ project(${PROJECT_NAME}
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(HEADERS ${CMAKE_SOURCE_DIR}/inc)
+set(HEADERS_DIR ${CMAKE_SOURCE_DIR}/inc)
 set(SRC ${CMAKE_SOURCE_DIR}/src)
 set(CLASSES_DIR ${SRC}/classes)
 
 #====================================
-# Project source compilation
-include_directories(${HEADERS})
-
-
+# Include directories
+include_directories(${HEADERS_DIR})
 #====================================
-# Adding classes as shared libraries
+# Automatically generate classes from template using script
 set(CLASSES_LIST session server)
-
-# Create classes (including headers & cpp files) (if needed, using bash script)
 execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/add_class.sh ${CLASSES_LIST} OUTPUT_VARIABLE add_classes)
 message("${add_classes}")
+#====================================
 
-# foreach(CLASS ${CLASSES_LIST})
-#     add_library(${CLASS} SHARED ${CLASSES_DIR}/${CLASS}.cpp)
-#     message("+- CLASS ('${CLASS}') WAS ADDED AS LIBRARY") 
-# endforeach()
+file(GLOB HEADERS ${HEADERS_DIR}/*.h)
+file(GLOB CLASSES ${CLASSES_DIR}/*.cpp)
 
-# Add main src file
-# add_executable(${PROJECT_NAME} ${SRC}/main.cpp)
-
-add_executable(${PROJECT_NAME} ${SRC}/main.cpp 
-                ${CLASSES_DIR}/session.cpp 
-                ${CLASSES_DIR}/server.cpp)
-
-# Linking libraries to executable
-# FOREACH(CLASS ${CLASSES_LIST})
-#     TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${CLASS})
-#     MESSAGE("*- '${CLASS}' library WAS LINKED TO EXECUTABLE") 
-# ENDFOREACH()
-
+add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES})
 
 #====================================
 # Add external libraries
-
 # Threads
 find_package(Threads)
 target_link_libraries(${PROJECT_NAME} Threads::Threads)
@@ -57,5 +39,3 @@ find_package(Boost 1.71 REQUIRED COMPONENTS
             system)       
 include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-
-
