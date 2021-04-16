@@ -2,20 +2,7 @@
 // Run as root or SUID 0, just datagram no data/payload
 #include "../inc/tcp_send.h"
 
-
-// Simple checksum function, may use others such as Cyclic Redundancy Check, CRC
-unsigned short csum(unsigned short *buf, int len)
-{
-    unsigned long sum;
-    for(sum=0; len>0; len--)
-        sum += *buf++;
-    sum = (sum >> 16) + (sum &0xffff);
-    sum += (sum >> 16);
-    return (unsigned short)(~sum);
-}
-
-
-int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
+int tcpsend::send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
 {
     int sd;
 // No data, just datagram
@@ -90,8 +77,8 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
         std::cout << "setsockopt() is OK" << std::endl;
 
     std::cout << "Using:::::Source IP:" << iph_sourceip << "port: "
-            << atoi(tcph_srcport) << ", Target IP: " << iph_destip
-            << "port: " << atoi(tcph_destport) << std::endl;
+              << atoi(tcph_srcport) << ", Target IP: " << iph_destip
+              << "port: " << atoi(tcph_destport) << std::endl;
 
 // sendto() loop, send every 2 second for 20 counts
     unsigned int count;
@@ -110,4 +97,15 @@ int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph
     }
     close(sd);
     return 0;
+}
+
+
+unsigned short tcpsend::csum(unsigned short *buf, int len)
+{
+    unsigned long sum;
+    for(sum=0; len>0; len--)
+        sum += *buf++;
+    sum = (sum >> 16) + (sum &0xffff);
+    sum += (sum >> 16);
+    return (unsigned short)(~sum);
 }

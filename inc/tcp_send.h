@@ -70,4 +70,23 @@ int send_tcp(const char* iph_sourceip, const char* udph_srcport, const char* iph
 
 unsigned short csum(unsigned short *buf, int len);
 
+class tcpsend
+{
+
+public:
+
+    tcpsend() {}
+
+    int send_tcp(const char* iph_sourceip, const char* tcph_srcport,
+                 const char* iph_destip, const char* tcph_destport);
+
+
+private:
+
+    // Simple checksum function, may use others such as Cyclic Redundancy Check, CRC
+    unsigned short csum(unsigned short *buf, int len);
+
+};
+
+
 #endif //EXAMPLE_SYN_TCP_SEND_H
