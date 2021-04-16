@@ -6,16 +6,16 @@
 #include <future>
 
 
-class thread_pool
+class ThreadPool
 {
 public:
 
-    explicit thread_pool(int threads)
+    explicit ThreadPool(int threads)
     {
         start(threads);
     }
 
-    ~thread_pool()
+    ~ThreadPool()
     {
         stop();
     }

@@ -2,7 +2,7 @@
 // Run as root or SUID 0, just datagram no data/payload
 #include "../inc/tcp_send.h"
 
-int tcpsend::send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
+int TCPSend::send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
 {
     int sd;
 // No data, just datagram
@@ -100,7 +100,7 @@ int tcpsend::send_tcp(const char* iph_sourceip, const char* tcph_srcport, const 
 }
 
 
-unsigned short tcpsend::csum(unsigned short *buf, int len)
+unsigned short TCPSend::csum(unsigned short *buf, int len)
 {
     unsigned long sum;
     for(sum=0; len>0; len--)

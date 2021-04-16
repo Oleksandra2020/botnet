@@ -1,38 +1,12 @@
-#include "../inc/tcp_send.h"
 #include "../inc/thread_pool.h"
+#include "../inc/victim_manipulation.h"
 
 int main(int argc, char *argv[])
 {
-    conf_t conf;
-    conf.src_dst[std::make_pair("192.168.0.102", "8080")] = std::make_pair("192.168.0.102", "8080");
-    conf.src_dst[std::make_pair("192.168.0.102", "1024")] = std::make_pair("192.168.0.102", "8080");
-
-    tcpsend send;
-
-    conf.threads = 2;
-
-    if (conf.threads == 1)
-    {
-        for (auto& it: conf.src_dst)
-        {
-            auto src_ip = it.first.first;
-            auto dst_ip = it.second.first;
-            auto src_port = it.first.second;
-            auto dst_port = it.second.second;
-            send.send_tcp(src_ip, src_port, dst_ip, dst_port);
-        }
-    } else
-    {
-        thread_pool pool(conf.threads);
-
-        for (auto& it: conf.src_dst)
-        {
-            pool.enqueue([src_ip = it.first.first, dst_ip = it.second.first, src_port = it.first.second, dst_port = it.second.second, &send]
-                         {
-                            send.send_tcp(src_ip, src_port, dst_ip, dst_port);
-                         });
-        }
-    }
+    victims v;
+    v.add_victim("192.168.0.102", "8080", "192.168.0.103", "8080");
+    v.add_victim("192.168.0.102", "1024", "192.168.0.104", "1024");
+    v.add_victim("192.168.0.102", "1025", "192.168.0.105", "1025");
 
     return 0;
 }
