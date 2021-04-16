@@ -1,8 +1,8 @@
 #include "session.h"
 
-#include <boost/asio/io_service.hpp>
-
-session::session(tcp::socket&& sock, io::io_service& io_context) : socket_(std::move(sock)), io_context_(io_context) {}
+session::session(tcp::socket&& sock, io::io_service& io_context, int id) : socket_(std::move(sock)), io_context_(io_context) {
+	id_ = id;
+}
 
 void session::start(on_msg_callback&& handler_func) {
 	on_message_callback_ = std::move(handler_func);
@@ -10,7 +10,7 @@ void session::start(on_msg_callback&& handler_func) {
 }
 
 void session::read() {
-	io::async_read_until(socket_, buffer_, "\n", [self = this](err error_code, std::size_t bytes_transferred) {
+	io::async_read_until(socket_, buffer_, '\n', [self = this](err error_code, std::size_t bytes_transferred) {
 		self->onRead(error_code, bytes_transferred);
 	});
 }
@@ -19,8 +19,14 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
 
 	if (!error_code) {
-		std::stringstream output;
-		output << std::istream(&buffer_).rdbuf();
+		std::string output;
+		std::stringstream tmp;
+		output.resize(bytes_transferred - 2);
+
+		tmp << std::istream(&buffer_).rdbuf();
+		tmp.read(&output[0], bytes_transferred - 2);
+
+		endpoint_ = socket_.remote_endpoint(error_code);
 
 		buffer_.consume(bytes_transferred);
 
@@ -32,7 +38,7 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 }
 
 void session::send(std::string const& data) {
-    // TODO: make it thread safe
+	// TODO: make it thread safe
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
 
