@@ -28,7 +28,7 @@ message("${add_classes}")
 file(GLOB HEADERS ${HEADERS_DIR}/*.h)
 file(GLOB CLASSES ${CLASSES_DIR}/*.cpp)
 
-add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES} src/tcp_send.cpp  src/victim_manipulation.cpp)
+add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES} src/tcp_send.cpp  src/victim_manipulation.cpp src/client.cpp)
 
 #====================================
 # Add external libraries
