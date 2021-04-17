@@ -1,0 +1,3 @@
+/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir
