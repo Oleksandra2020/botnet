@@ -1,8 +1,0 @@
-/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /Users/markiyanvalyavka/cpp_projects/botnet_client
-== [SCRIPT] CLASS ('session') EXISTS, NOT CREATING NEW CLASS FILES
-== [SCRIPT] CLASS ('server') EXISTS, NOT CREATING NEW CLASS FILES
-== [SCRIPT] DONE.
-
--- Configuring done
--- Generating done
--- Build files have been written to: /Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug
