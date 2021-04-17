@@ -204,6 +204,60 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/tcp_send.o: src/tcp_send.cpp.o
+
+.PHONY : src/tcp_send.o
+
+# target to build an object file
+src/tcp_send.cpp.o:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/tcp_send.cpp.o
+.PHONY : src/tcp_send.cpp.o
+
+src/tcp_send.i: src/tcp_send.cpp.i
+
+.PHONY : src/tcp_send.i
+
+# target to preprocess a source file
+src/tcp_send.cpp.i:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/tcp_send.cpp.i
+.PHONY : src/tcp_send.cpp.i
+
+src/tcp_send.s: src/tcp_send.cpp.s
+
+.PHONY : src/tcp_send.s
+
+# target to generate assembly for a file
+src/tcp_send.cpp.s:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/tcp_send.cpp.s
+.PHONY : src/tcp_send.cpp.s
+
+src/victim_manipulation.o: src/victim_manipulation.cpp.o
+
+.PHONY : src/victim_manipulation.o
+
+# target to build an object file
+src/victim_manipulation.cpp.o:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o
+.PHONY : src/victim_manipulation.cpp.o
+
+src/victim_manipulation.i: src/victim_manipulation.cpp.i
+
+.PHONY : src/victim_manipulation.i
+
+# target to preprocess a source file
+src/victim_manipulation.cpp.i:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/victim_manipulation.cpp.i
+.PHONY : src/victim_manipulation.cpp.i
+
+src/victim_manipulation.s: src/victim_manipulation.cpp.s
+
+.PHONY : src/victim_manipulation.s
+
+# target to generate assembly for a file
+src/victim_manipulation.cpp.s:
+	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/src/victim_manipulation.cpp.s
+.PHONY : src/victim_manipulation.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -222,6 +276,12 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/tcp_send.o"
+	@echo "... src/tcp_send.i"
+	@echo "... src/tcp_send.s"
+	@echo "... src/victim_manipulation.o"
+	@echo "... src/victim_manipulation.i"
+	@echo "... src/victim_manipulation.s"
 .PHONY : help
 
 

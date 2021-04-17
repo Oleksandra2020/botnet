@@ -92,6 +92,15 @@
 		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/inc/session.h">
 			<Option target="botnet"/>
 		</Unit>
+		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/inc/tcp_send.h">
+			<Option target="botnet"/>
+		</Unit>
+		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/inc/thread_pool.h">
+			<Option target="botnet"/>
+		</Unit>
+		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/inc/victim_manipulation.h">
+			<Option target="botnet"/>
+		</Unit>
 		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/src/classes/server.cpp">
 			<Option target="botnet"/>
 		</Unit>
@@ -99,6 +108,12 @@
 			<Option target="botnet"/>
 		</Unit>
 		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/src/main.cpp">
+			<Option target="botnet"/>
+		</Unit>
+		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/src/tcp_send.cpp">
+			<Option target="botnet"/>
+		</Unit>
+		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/src/victim_manipulation.cpp">
 			<Option target="botnet"/>
 		</Unit>
 		<Unit filename="/Users/markiyanvalyavka/cpp_projects/botnet_client/CMakeLists.txt">

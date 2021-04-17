@@ -74,12 +74,12 @@ preinstall:
 CMakeFiles/botnet.dir/all:
 	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/depend
 	$(MAKE) -f CMakeFiles/botnet.dir/build.make CMakeFiles/botnet.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4 "Built target botnet"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target botnet"
 .PHONY : CMakeFiles/botnet.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/botnet.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles 4
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles 6
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/botnet.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/botnet.dir/rule

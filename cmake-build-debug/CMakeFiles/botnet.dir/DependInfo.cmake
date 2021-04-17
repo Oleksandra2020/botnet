@@ -7,6 +7,8 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/Users/markiyanvalyavka/cpp_projects/botnet_client/src/classes/server.cpp" "/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir/src/classes/server.cpp.o"
   "/Users/markiyanvalyavka/cpp_projects/botnet_client/src/classes/session.cpp" "/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir/src/classes/session.cpp.o"
   "/Users/markiyanvalyavka/cpp_projects/botnet_client/src/main.cpp" "/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir/src/main.cpp.o"
+  "/Users/markiyanvalyavka/cpp_projects/botnet_client/src/tcp_send.cpp" "/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir/src/tcp_send.cpp.o"
+  "/Users/markiyanvalyavka/cpp_projects/botnet_client/src/victim_manipulation.cpp" "/Users/markiyanvalyavka/cpp_projects/botnet_client/cmake-build-debug/CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "AppleClang")
 

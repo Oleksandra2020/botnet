@@ -2813,6 +2813,9 @@ CMakeFiles/botnet.dir/src/classes/session.cpp.o
 CMakeFiles/botnet.dir/src/main.cpp.o
  ../inc/server.h
  ../inc/session.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/tcp_send.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/thread_pool.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/victim_manipulation.h
  /Users/markiyanvalyavka/cpp_projects/botnet_client/src/main.cpp
  /usr/local/include/boost/array.hpp
  /usr/local/include/boost/asio.hpp
@@ -4220,3 +4223,11 @@ CMakeFiles/botnet.dir/src/main.cpp.o
  /usr/local/include/boost/winapi/local_memory.hpp
  /usr/local/include/boost/winapi/time.hpp
  /usr/local/include/boost/winapi/timers.hpp
+CMakeFiles/botnet.dir/src/tcp_send.cpp.o
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/tcp_send.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/src/tcp_send.cpp
+CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/tcp_send.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/thread_pool.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/inc/victim_manipulation.h
+ /Users/markiyanvalyavka/cpp_projects/botnet_client/src/victim_manipulation.cpp

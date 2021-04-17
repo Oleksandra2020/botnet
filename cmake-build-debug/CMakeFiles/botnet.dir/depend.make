@@ -2812,6 +2812,9 @@ CMakeFiles/botnet.dir/src/classes/session.cpp.o: /usr/local/include/boost/winapi
 
 CMakeFiles/botnet.dir/src/main.cpp.o: ../inc/server.h
 CMakeFiles/botnet.dir/src/main.cpp.o: ../inc/session.h
+CMakeFiles/botnet.dir/src/main.cpp.o: ../inc/tcp_send.h
+CMakeFiles/botnet.dir/src/main.cpp.o: ../inc/thread_pool.h
+CMakeFiles/botnet.dir/src/main.cpp.o: ../inc/victim_manipulation.h
 CMakeFiles/botnet.dir/src/main.cpp.o: ../src/main.cpp
 CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/array.hpp
 CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/asio.hpp
@@ -4219,4 +4222,12 @@ CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/winapi/get_last_e
 CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/winapi/local_memory.hpp
 CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/winapi/time.hpp
 CMakeFiles/botnet.dir/src/main.cpp.o: /usr/local/include/boost/winapi/timers.hpp
+
+CMakeFiles/botnet.dir/src/tcp_send.cpp.o: ../inc/tcp_send.h
+CMakeFiles/botnet.dir/src/tcp_send.cpp.o: ../src/tcp_send.cpp
+
+CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o: ../inc/tcp_send.h
+CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o: ../inc/thread_pool.h
+CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o: ../inc/victim_manipulation.h
+CMakeFiles/botnet.dir/src/victim_manipulation.cpp.o: ../src/victim_manipulation.cpp
 
