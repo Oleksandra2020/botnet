@@ -1,4 +1,3 @@
-
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <iostream>
@@ -7,11 +6,11 @@
 
 #include "server.h"
 #include "client.h"
-#include "../inc/thread_pool.h"
-#include "../inc/victim_manipulation.h"
+#include "thread_pool.h"
+#include "victim_manipulation.h"
 
 
-#define PORT_NUMBER 3916
+#define PORT_NUMBER 2772
 #define SERVER_IP "1.1.1.1"
 
 namespace io = boost::asio;

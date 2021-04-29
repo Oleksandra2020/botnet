@@ -1,7 +1,5 @@
 #include "server.h"
 
-#include <mutex>
-
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {}
 

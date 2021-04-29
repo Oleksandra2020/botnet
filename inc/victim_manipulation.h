@@ -2,24 +2,25 @@
 #define EXAMPLE_SYN_VICTIM_MANIPULATION_H
 
 #include "tcp_send.h"
-#include "thread_pool.h"
 #include "thread"
+#include "thread_pool.h"
 
+class victims {
+    public:
+	thread_pool pool;
+	TCPSend send;
 
-class victims
-{
-public:
-    ThreadPool pool;
-    TCPSend send;
+	victims(int threads) : pool(threads), send() {}
 
-    victims() : pool(std::thread::hardware_concurrency()), send() {}
+	void add_victim(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport);
 
-    void add_victim(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport);
+	void remove_victim(const char* dest_ip, const char* dest_port);
 
-    void remove_victim(size_t victim_id);
+	void clear_thread_pool(int threads);
 
-private:
+	void clear_thread(int thread);
 
+    private:
 };
 
-#endif //EXAMPLE_SYN_VICTIM_MANIPULATION_H
+#endif	// EXAMPLE_SYN_VICTIM_MANIPULATION_H

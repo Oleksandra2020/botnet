@@ -1,0 +1,7 @@
+Language: Cpp
+# Force pointers to the type for C++.
+BasedOnStyle: Google
+UseTab: Always
+IndentWidth: 8
+ColumnLimit: 130
+AccessModifierOffset: -4
