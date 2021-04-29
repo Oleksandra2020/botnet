@@ -6,11 +6,13 @@
 #include <string>
 
 #include "server.h"
+#include "client.h"
 #include "../inc/thread_pool.h"
 #include "../inc/victim_manipulation.h"
 
 
-#define PORT_NUMBER 2772
+#define PORT_NUMBER 3916
+#define SERVER_IP "1.1.1.1"
 
 namespace io = boost::asio;
 
@@ -33,11 +35,10 @@ int main(int argc, char* argv[]) {
 
     } else if (std::string(argv[1]) == "client") {
 
-        std::cout << "Running as client" << std::endl;
-        victims v;
-        v.add_victim("192.168.0.102", "8080", "192.168.0.103", "8080");
-        v.add_victim("192.168.0.102", "1024", "192.168.0.104", "1024");
-        v.add_victim("192.168.0.102", "1025", "192.168.0.105", "1025");
+        io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
+        client client_tcp(io_context, PORT_NUMBER, SERVER_IP);
+        client_tcp.start();
+        io_context.run();
 
     }
 

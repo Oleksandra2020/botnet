@@ -29,6 +29,7 @@ class session {
 	void stop();
 	void send(std::string const&);
 
+    void read();
 	int id_;
 	bool idle_;
 	int inactive_timeout_count_;
@@ -36,7 +37,7 @@ class session {
 	tcp::endpoint endpoint_;
 
     private:
-	void read();
+
 	void write();
 	void onRead(err, std::size_t);
 	void onWrite(err, std::size_t);
