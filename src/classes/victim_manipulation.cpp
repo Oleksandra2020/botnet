@@ -1,4 +1,4 @@
-#include "../inc/victim_manipulation.h"
+#include "victim_manipulation.h"
 
 
 void victims::add_victim(const char* iph_destip, const char* tcph_destport)

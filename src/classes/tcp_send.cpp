@@ -1,6 +1,6 @@
 //---cat rawtcp.c---
 // Run as root or SUID 0, just datagram no data/payload
-#include "../inc/tcp_send.h"
+#include "tcp_send.h"
 
 int TCPSend::send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport)
 {

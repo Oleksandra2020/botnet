@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <map>
 #include <set>
+#include <string.h>
 
 // Packet length
 #define PCKT_LEN 8192
