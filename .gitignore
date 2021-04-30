@@ -1,9 +1,11 @@
+# IDE caches
 /.idea
-/cmake-build-debug
+.cache/*
 
 
 # Build directory
 build/*
+/cmake-build-debug
 
 # Prerequisites
 *.d
