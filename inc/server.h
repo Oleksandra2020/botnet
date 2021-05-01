@@ -27,15 +27,24 @@ class server {
 	server(io::io_context &, std::uint16_t);
 	void start();
 
-    private:
-	void notifyAll(std::string const &);
-	void handleResponse(std::string &, session *);
-	void pingClients();
-	void send();
-	long int generateId();
+	// Methods used by manager executable
+	void initManager(std::string);
+	void getClients();
+	void getVictims();
+	void addVictim(std::string);
+	void removeVictim(std::string);
+	void removeClient(std::string);
 
+    private:
 	void accept();
 	void onAccept(err error_code);
+	void handleResponse(std::string &, session *);
+
+	void sendAllClients(std::string const &);
+	void pingClients();
+
+	long int generateId();
+	bool checkCredentials(std::string);
 
 	std::future<void> routine_future_;
 

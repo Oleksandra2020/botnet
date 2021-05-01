@@ -15,14 +15,14 @@ void client::start() {
 	auto server = tmp_vect_for_session_.emplace_back(std::make_shared<session>(std::move(*socket_), io_context, 1));
 
 	server->start(boost::bind(&client::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
-	server->send("Hello world!\n");
+	server->send("INIT;flk23f9f_f=fsd\n");
 	server->read();
 }
 
 void client::handleResponse(std::string &query, session *client) {
-	std::cout << client->endpoint_ << " [SERVER SAYS]: " << query;
+	std::cout << client->endpoint_ << "[SERVER SAYS]: " << query << std::endl;
 
 	if (query == query) {
-		client->send("[ALIVE]\n");
+		client->send("ALIVE;True\n");
 	}
 }

