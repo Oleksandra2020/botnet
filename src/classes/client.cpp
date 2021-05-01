@@ -1,7 +1,7 @@
 #include "client.h"
 
-client::client(io::io_context &io_context, std::uint16_t port, std::string server_ip)
-    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)), server_ip_(server_ip), server_port_(port) {}
+client::client(io::io_context &io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port)
+    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)), server_ip_(server_ip), server_port_(server_port) {}
 
 void client::start() {
 	tcp::socket socket(io_context);

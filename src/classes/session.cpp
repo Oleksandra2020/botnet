@@ -24,11 +24,12 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 		output.resize(bytes_transferred);
 
 		tmp << std::istream(&buffer_).rdbuf();
-		tmp.read(&output[0], bytes_transferred - 1);
+		tmp.read(&output[0], bytes_transferred);
+        output = output.substr(0, output.size()-1);
 
 		endpoint_ = socket_.remote_endpoint(error_code);
-
-		buffer_.consume(bytes_transferred - 1);
+        
+		buffer_.consume(bytes_transferred);
 
 		on_message_callback_(output, this);
 

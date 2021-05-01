@@ -1,3 +1,4 @@
+#include <bits/stdint-uintn.h>
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <iostream>
@@ -10,8 +11,9 @@
 #include "victim_manipulation.h"
 
 
-#define PORT_NUMBER 2772
-#define SERVER_IP "1.1.1.1"
+#define SERVER_INTERNAL_PORT_NUMBER 2772
+#define SERVER_EXTERNAL_PORT_NUMBER 3916
+#define SERVER_IP ""
 
 namespace io = boost::asio;
 
@@ -28,14 +30,14 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Running as server" << std::endl;
         io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-        server tcp_server(io_context, PORT_NUMBER);
+        server tcp_server(io_context, SERVER_INTERNAL_PORT_NUMBER);
         tcp_server.start();
         io_context.run();
 
     } else if (std::string(argv[1]) == "client") {
 
         io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-        client client_tcp(io_context, PORT_NUMBER, SERVER_IP);
+        client client_tcp(io_context, atoi(argv[2]), SERVER_IP, SERVER_EXTERNAL_PORT_NUMBER);
         client_tcp.start();
         io_context.run();
 

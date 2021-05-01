@@ -42,11 +42,10 @@ void server::handleResponse(std::string& query, session* client) {
 
 		std::cout << client->endpoint_ << " disconected" << std::endl;
 	}
-	if (query == "[ALIVE]") {
+	if (std::string(query) == "[ALIVE]") {
 		client->inactive_timeout_count_ = 0;
 	}
 }
-
 void server::pingClients() {
 	while (true) {
 		usleep(INACTIVITY_TIMEOUT);

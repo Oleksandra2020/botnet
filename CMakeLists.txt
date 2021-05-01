@@ -19,6 +19,11 @@ set(CLASSES_DIR ${SRC}/classes)
 # Include directories
 include_directories(${HEADERS_DIR})
 #====================================
+# Automatically generate classes from template using script
+set(CLASSES_LIST session server)
+execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/add_class.sh ${CLASSES_LIST} OUTPUT_VARIABLE add_classes)
+message("${add_classes}")
+#====================================
 
 file(GLOB HEADERS ${HEADERS_DIR}/*.h)
 file(GLOB CLASSES ${CLASSES_DIR}/*.cpp)
@@ -36,4 +41,3 @@ find_package(Boost 1.71 REQUIRED COMPONENTS
             system)       
 include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads)
-

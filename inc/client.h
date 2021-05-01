@@ -23,7 +23,7 @@ using err = boost::system::error_code;
 
 class client {
     public:
-	client(io::io_context &, std::uint16_t, std::string);
+	client(io::io_context &, std::uint16_t, std::string, std::uint16_t);
 	void start();
 	//
 	// private:
