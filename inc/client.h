@@ -14,9 +14,10 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
-#include "session.h"
 #include "msg_parser.h"
+#include "session.h"
 #include "victim_manipulation.h"
 
 namespace io = boost::asio;
@@ -24,32 +25,23 @@ using tcp = io::ip::tcp;
 using err = boost::system::error_code;
 
 class client {
+    public:
+	enum command_code {
+		eARE_YOU_ALIVE,
+		eCOMMAND_NOT_FOUND,
+	};
 
-
-
-public:
-
-    enum command_code
-    {
-        eARE_YOU_ALIVE,
-        eCOMMAND_NOT_FOUND,
-    };
-
-	client(io::io_context &, std::uint16_t, std::string, std::uint16_t, msg_parser&, victims*);
+	client(io::io_context &, std::uint16_t, std::string, std::uint16_t, victims *);
 	void start();
-	//
-	// private:
-	//
+
+    private:
 	void handleResponse(std::string &, session *);
-    command_code hash_command (std::string const& in_command);
-	//    void send();
-	//    long int generateId();
-	//
+	void handleAlive(std::vector<std::string> &, session *);
+
 	void accept();
 	void onAccept(err error_code);
 
-	//
-
+	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> commands_;
 
 	io::io_context &io_context;
 	tcp::acceptor acceptor;
@@ -58,7 +50,7 @@ public:
 	std::uint16_t server_port_;
 	std::vector<std::shared_ptr<session>> tmp_vect_for_session_;
 	msg_parser msg_parser_;
-	victims* victims_;
+	victims *victims_;
 };
 
 #endif	// BOTNET_CLIENT_CLIENT_H

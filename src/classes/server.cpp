@@ -1,8 +1,10 @@
 #include "server.h"
 
-server::server(io::io_context& io_context, std::uint16_t port, msg_parser& msg_parser)
+server::server(io::io_context& io_context, std::uint16_t port)
     : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {
-    this->msg_parser_ = msg_parser;
+	commands_ = {
+	    {"[ARE_YOU_ALIVE]", boost::bind(&server::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2)},
+	};
 }
 
 void server::start() {
@@ -28,25 +30,20 @@ void server::onAccept(err error_code) {
 	accept();
 }
 
-server::command_code server::hash_command (std::string const& in_command) {
-    //if (in_command == "[ALIVE]") return eCOMMAND_NOT_FOUND;
-
-    return eCOMMAND_NOT_FOUND;
-}
-
-
 void server::handleResponse(std::string& query, session* client) {
 	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
 
-	if (query == "QUIT;True") {
-		client->stop();
-		clients_map.erase(client->id_);
+	std::map<std::string, std::vector<std::string>> parsed_msg = msg_parser_.parse_msg(query);
 
-		std::cout << client->endpoint_ << " disconected" << std::endl;
+	if (parsed_msg["is_valid_msg"][0] == "false") {
+		return;
 	}
-	if (std::string(query) == "ALIVE;True") {
-		client->inactive_timeout_count_ = 0;
-	}
+	auto handler = commands_.find(parsed_msg["command"][0])->second;
+	if (handler) handler(parsed_msg["params"], client);
+}
+
+void server::handleAlive(std::vector<std::string>& params, session* client) {
+	if (stoi(params[0])) client->inactive_timeout_count_ = 0;
 }
 
 void server::initManager(std::string passwd) {
