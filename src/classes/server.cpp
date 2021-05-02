@@ -86,7 +86,7 @@ void server::pingClients() {
 				inactive_clients.push_back(client.second->id_);
 				client.second->stop();
 			} else {
-				client.second->send("Send '[ALIVE]' to approve your presence\n");
+				client.second->send(":msg [ARE_YOU_ALIVE]\n");
 			}
 		}
 		{

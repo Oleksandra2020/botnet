@@ -23,7 +23,7 @@ include_directories(${HEADERS_DIR})
 file(GLOB HEADERS ${HEADERS_DIR}/*.h)
 file(GLOB CLASSES ${CLASSES_DIR}/*.cpp)
 
-add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES})
+add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES} src/classes/msg_parser.cpp inc/msg_parser.h)
 
 #====================================
 # Add external libraries
