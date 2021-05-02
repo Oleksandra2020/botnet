@@ -1,7 +1,9 @@
 #include "server.h"
 
-server::server(io::io_context& io_context, std::uint16_t port)
-    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {}
+server::server(io::io_context& io_context, std::uint16_t port, msg_parser& msg_parser)
+    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {
+    this->msg_parser_ = msg_parser;
+}
 
 void server::start() {
 	routine_future_ = std::async(std::launch::async, &server::pingClients,
@@ -25,6 +27,13 @@ void server::onAccept(err error_code) {
 	client->start(boost::bind(&server::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
 	accept();
 }
+
+server::command_code server::hash_command (std::string const& in_command) {
+    //if (in_command == "[ALIVE]") return eCOMMAND_NOT_FOUND;
+
+    return eCOMMAND_NOT_FOUND;
+}
+
 
 void server::handleResponse(std::string& query, session* client) {
 	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;

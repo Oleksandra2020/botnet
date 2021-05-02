@@ -18,13 +18,21 @@
 #include <unordered_map>
 
 #include "session.h"
+#include "msg_parser.h"
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
 using err = boost::system::error_code;
 class server {
     public:
-	server(io::io_context &, std::uint16_t);
+
+    enum command_code
+    {
+        eCOMMAND_NOT_FOUND,
+    };
+
+
+	server(io::io_context &, std::uint16_t, msg_parser&);
 	void start();
 
 	// Methods used by manager executable
@@ -46,6 +54,8 @@ class server {
 	long int generateId();
 	bool checkCredentials(std::string);
 
+    command_code hash_command (std::string const& in_command);
+
 	std::future<void> routine_future_;
 
 	io::io_context &io_context;
@@ -54,6 +64,7 @@ class server {
 
 	std::unordered_map<long int, std::shared_ptr<session>> clients_map;
 	std::mutex clients_m;
+    msg_parser msg_parser_;
 };
 
 #endif	// SERVER_H
