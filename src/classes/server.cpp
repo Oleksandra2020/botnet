@@ -1,8 +1,8 @@
 #include "server.h"
 
 server::server(io::io_context& io_context, std::uint16_t port)
-    : io_context(io_context), acceptor(io_context, tcp::endpoint(tcp::v4(), port)) {
-	commands_ = {
+    : io_context_(io_context), acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
+	command_handlers_ = {
 	    {"[ARE_YOU_ALIVE]", boost::bind(&server::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2)},
 	};
 }
@@ -14,14 +14,15 @@ void server::start() {
 }
 
 void server::accept() {
-	socket.emplace(io_context);
-	acceptor.async_accept(*socket, [self = this](err error_code) { self->onAccept(error_code); });
+	socket_.emplace(io_context_);
+	acceptor_.async_accept(*socket_, [self = this](err error_code) { self->onAccept(error_code); });
 }
 
 void server::onAccept(err error_code) {
 	int client_id = generateId();
-	clients_map.insert(std::make_pair(client_id, std::make_shared<session>(std::move(*socket), io_context, client_id)));
-	auto& client = clients_map.find(client_id)->second;
+	clients_sessions_container_.insert(
+	    std::make_pair(client_id, std::make_shared<session>(std::move(*socket_), io_context_, client_id)));
+	auto& client = clients_sessions_container_.find(client_id)->second;
 
 	client->send("#: Connected succesfully\n");
 	std::cout << "New client connected." << std::endl;
@@ -33,12 +34,12 @@ void server::onAccept(err error_code) {
 void server::handleResponse(std::string& query, session* client) {
 	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
 
-	std::map<std::string, std::vector<std::string>> parsed_msg = msg_parser_.parse_msg(query);
+	auto parsed_msg = msg_parser_.parse_msg(query);
 
 	if (parsed_msg["is_valid_msg"][0] == "false") {
 		return;
 	}
-	auto handler = commands_.find(parsed_msg["command"][0])->second;
+	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
 	if (handler) handler(parsed_msg["params"], client);
 }
 
@@ -82,7 +83,7 @@ void server::pingClients() {
 
 		std::vector<long int> inactive_clients;
 
-		for (auto& client : clients_map) {
+		for (auto& client : clients_sessions_container_) {
 			client.second->inactive_timeout_count_++;
 
 			if (client.second->inactive_timeout_count_ >= 3) {
@@ -96,25 +97,25 @@ void server::pingClients() {
 			}
 		}
 		{
-			std::unique_lock<std::mutex> lock(clients_m);
+			std::unique_lock<std::mutex> lock(clients_m_);
 			for (auto& client_id : inactive_clients) {
-				clients_map.erase(client_id);
+				clients_sessions_container_.erase(client_id);
 			}
 		}
 	}
 }
 
 void server::sendAllClients(std::string const& msg) {
-	for (auto& pair : clients_map) {
+	for (auto& pair : clients_sessions_container_) {
 		pair.second->send(msg);
 	}
 }
 
 long int server::generateId() {
-	clients_m.lock();
+	clients_m_.lock();
 	long int id =
-	    clients_map.size() +
+	    clients_sessions_container_.size() +
 	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	clients_m.unlock();
+	clients_m_.unlock();
 	return id;
 }

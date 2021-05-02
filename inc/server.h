@@ -25,15 +25,9 @@ using tcp = io::ip::tcp;
 using err = boost::system::error_code;
 class server {
     public:
-	enum command_code {
-		eARE_YOU_ALIVE,
-		eCOMMAND_NOT_FOUND,
-	};
-
 	server(io::io_context &, std::uint16_t);
 	void start();
 
-	// Methods used by manager executable
 	void initManager(std::string);
 	void getClients();
 	void getVictims();
@@ -44,7 +38,9 @@ class server {
     private:
 	void accept();
 	void onAccept(err error_code);
+
 	void handleResponse(std::string &, session *);
+	void handleAlive(std::vector<std::string> &, session *);
 
 	void sendAllClients(std::string const &);
 	void pingClients();
@@ -52,19 +48,16 @@ class server {
 	long int generateId();
 	bool checkCredentials(std::string);
 
-	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> commands_;
-
-	void handleAlive(std::vector<std::string> &, session *);
-
 	std::future<void> routine_future_;
 
-	io::io_context &io_context;
-	tcp::acceptor acceptor;
-	std::optional<tcp::socket> socket;
+	io::io_context &io_context_;
+	tcp::acceptor acceptor_;
+	std::optional<tcp::socket> socket_;
 
-	std::unordered_map<long int, std::shared_ptr<session>> clients_map;
-	std::mutex clients_m;
+	std::unordered_map<long int, std::shared_ptr<session>> clients_sessions_container_;
+	std::mutex clients_m_;
 	msg_parser msg_parser_;
+	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> command_handlers_;
 };
 
 #endif	// SERVER_H
