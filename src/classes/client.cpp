@@ -7,7 +7,8 @@ client::client(io::io_context& io_context, std::uint16_t port, std::string serve
       server_port_(server_port),
       victims_(victims) {
 	command_handlers_ = {
-	    {"[ARE_YOU_ALIVE]", boost::bind(&client::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2)},
+	    {"[ARE_YOU_ALIVE]",
+	     boost::bind(&client::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	};
 }
 
@@ -36,7 +37,10 @@ void client::handleResponse(std::string& query, session* client) {
 		return;
 	}
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
-	if (handler) handler(parsed_msg["params"], client);
+	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
 }
 
-void client::handleAlive(std::vector<std::string>& params, session* client) { client->send(":msg [ARE_YOU_ALIVE] 1\n"); }
+void client::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
+	std::vector<std::string> output_params = {"1"};
+	client->send(msg_parser_.genCommand(command, output_params));
+}

@@ -1,7 +1,3 @@
-//
-// Created by Markiyan Valyavka on 5/2/21.
-//
-
 #ifndef BOTNET_MSG_PARSER_H
 #define BOTNET_MSG_PARSER_H
 
@@ -14,6 +10,7 @@
 class msg_parser {
     public:
 	std::map<std::string, std::vector<std::string>> parse_msg(std::string);
+	std::string genCommand(std::string& command, std::vector<std::string>);
 
     private:
 	std::string bool_to_str(bool);

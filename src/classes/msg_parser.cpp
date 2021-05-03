@@ -1,7 +1,3 @@
-//
-// Created by Markiyan Valyavka on 5/2/21.
-//
-
 #include "msg_parser.h"
 
 std::map<std::string, std::vector<std::string>> msg_parser::parse_msg(std::string msg) {
@@ -27,3 +23,11 @@ std::map<std::string, std::vector<std::string>> msg_parser::parse_msg(std::strin
 }
 
 std::string msg_parser::bool_to_str(bool b) { return b ? "true" : "false"; }
+
+std::string msg_parser::genCommand(std::string& command, std::vector<std::string> items) {
+	std::string output = ":msg " + command;
+	for (auto& v : items) {
+		output += " " + v;
+	}
+	return output + "\n";
+}

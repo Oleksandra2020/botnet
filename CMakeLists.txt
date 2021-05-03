@@ -7,6 +7,9 @@ project(${PROJECT_NAME}
         HOMEPAGE_URL "https://github.com/Oleksandra2020/botnet"
         LANGUAGES C CXX)
 
+set(SERV_CLI server_client)
+set(ADMIN_MANG admin_manager)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 SET(Boost_USE_STATIC_LIBS OFF)
@@ -23,16 +26,16 @@ include_directories(${HEADERS_DIR})
 file(GLOB HEADERS ${HEADERS_DIR}/*.h)
 file(GLOB CLASSES ${CLASSES_DIR}/*.cpp)
 
-add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES} src/classes/msg_parser.cpp inc/msg_parser.h)
+add_executable(${SERV_CLI} ${SRC}/main.cpp ${HEADERS} ${CLASSES})
 
 #====================================
 # Add external libraries
 # Threads
 find_package(Threads)
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
+target_link_libraries(${SERV_CLI} Threads::Threads)
 
 # Boost.Asio
 find_package(Boost 1.71 REQUIRED COMPONENTS
             system)       
 include_directories(${Boost_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads)
+target_link_libraries(${SERV_CLI} ${Boost_LIBRARIES} Threads::Threads)

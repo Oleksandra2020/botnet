@@ -32,9 +32,9 @@ class client {
     private:
 	void accept();
 	void onAccept(err error_code);
-    
+
 	void handleResponse(std::string &, session *);
-	void handleAlive(std::vector<std::string> &, session *);
+	void handleAlive(std::string &, std::vector<std::string> &, session *);
 
 	io::io_context &io_context_;
 	tcp::acceptor acceptor_;
@@ -45,7 +45,8 @@ class client {
 	std::vector<std::shared_ptr<session>> server_session_container_;
 	msg_parser msg_parser_;
 	victims *victims_;
-	std::unordered_map<std::string, std::function<void(std::vector<std::string> &, session *)>> command_handlers_;
+	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
+	    command_handlers_;
 };
 
 #endif	// BOTNET_CLIENT_CLIENT_H
