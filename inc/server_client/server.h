@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define INACTIVITY_TIMEOUT 100 * 1000000  // 1sec
+#define INACTIVITY_TIMEOUT 1 * 1000000  // 1sec
 #include <unistd.h>
 
 #include <algorithm>

