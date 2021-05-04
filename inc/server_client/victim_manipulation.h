@@ -17,7 +17,9 @@ public:
         source_port = tcph_srcport;
     }
 
-    void add_victim(const char* iph_destip, const char* tcph_destport);
+    void add_tcp_victim(const char* iph_destip, const char* tcph_destport);
+
+    void add_http_victim(const char* host_name);
 
     void remove_victim(const char* dest_ip, const char* dest_port);
 

@@ -1,13 +1,24 @@
 #include "victim_manipulation.h"
 
 
-void victims::add_victim(const char* iph_destip, const char* tcph_destport)
+void victims::add_tcp_victim(const char* iph_destip, const char* tcph_destport)
 {
     src_dst ports_ips{};
     ports_ips.source_ip = source_ip;
     ports_ips.source_port = source_port;
     ports_ips.dest_ip = iph_destip;
     ports_ips.dest_port = tcph_destport;
+    ports_ips.flood_type = SYN_FLOOD;
+    pool.enqueue(ports_ips);
+}
+
+void victims::add_http_victim(const char* host_name)
+{
+    src_dst ports_ips{};
+    ports_ips.source_ip = source_ip;
+    ports_ips.source_port = source_port;
+    ports_ips.flood_type = HTTP_FLOOD;
+    ports_ips.host_name = host_name;
     pool.enqueue(ports_ips);
 }
 

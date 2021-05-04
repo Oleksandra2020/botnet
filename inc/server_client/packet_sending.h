@@ -5,13 +5,23 @@
 #include <unistd.h>
 #include <cstdio>
 #include <sys/socket.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
 #include <iostream>
 #include <arpa/inet.h>
 #include <map>
 #include <set>
 #include <string.h>
+#include <iostream>
+#include <ctype.h>
+#include <cstring>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <sstream>
+#include <fstream>
+#include <string>
 
 // Packet length
 #define PCKT_LEN 8192
@@ -23,6 +33,7 @@
 #define TCP_OFFSET 5
 #define TCP_SYN 1
 #define TCP_WIN 32767
+#define PORT 80
 
 
 struct ipheader {
@@ -63,15 +74,16 @@ struct tcpheader {
     unsigned short int tcph_urgptr;
 };
 
-class TCPSend
+class packet_sending
 {
 
 public:
 
-    TCPSend() {}
+    packet_sending() = default;
 
     int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport);
 
+    void send_get_request(const char* host_name);
 
 private:
 
