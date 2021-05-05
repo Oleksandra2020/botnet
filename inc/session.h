@@ -24,6 +24,7 @@ class session {
 
     public:
 	session(tcp::socket&&, io::io_context&, size_t);
+	~session();
 
 	void start(on_msg_callback&& onMsg);
 	void stop();

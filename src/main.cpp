@@ -20,7 +20,7 @@
 
 #define SERVER_LOCAL_PORT_NUMBER 2772
 #define SERVER_PUBLIC_PORT_NUMBER 3916
-#define SERVER_IP ""
+#define SERVER_IP "1.1.1.1"
 
 #define THREAD_NUM 12
 

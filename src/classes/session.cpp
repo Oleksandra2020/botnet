@@ -2,8 +2,9 @@
 
 session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
-    inactive_timeout_count_ = 1;
+	inactive_timeout_count_ = 1;
 }
+session::~session() { stop(); }
 
 void session::start(on_msg_callback&& handler_func) {
 	on_message_callback_ = std::move(handler_func);
@@ -18,7 +19,6 @@ void session::read() {
 
 void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
-
 	if (!error_code) {
 		std::string output;
 		std::stringstream tmp;
@@ -26,10 +26,10 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 
 		tmp << std::istream(&buffer_).rdbuf();
 		tmp.read(&output[0], bytes_transferred);
-        output = output.substr(0, output.size()-1);
+		output = output.substr(0, output.size() - 1);
 
 		endpoint_ = socket_.remote_endpoint(error_code);
-        
+
 		buffer_.consume(bytes_transferred);
 
 		on_message_callback_(output, this);
@@ -43,7 +43,6 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 void session::send(std::string const& data) {
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
-
 	if (idle) {
 		write();
 	}
@@ -70,5 +69,6 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 }
 
 void session::stop() {
-	io_context_.post([this]() { socket_.close(error_code_); });
+	// io_context_.post([this]() { socket_.close(error_code_); });
+	socket_.close(error_code_);
 }

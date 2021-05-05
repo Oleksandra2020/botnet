@@ -1,6 +1,5 @@
 #include "manager.h"
 
-
 manager::manager(io::io_context& io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),

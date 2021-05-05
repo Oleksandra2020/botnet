@@ -61,7 +61,7 @@ class server {
 	void removeVictim(std::string &, std::vector<std::string> &params, session *client);
 	void removeClient(std::string &, std::vector<std::string> &params, session *client);
 
-	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
+	std::unordered_map<size_t, std::unique_ptr<session>> clients_sessions_container_;
 	std::mutex clients_m_;
 	msg_parser msg_parser_;
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>

