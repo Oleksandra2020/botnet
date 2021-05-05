@@ -7,7 +7,12 @@
 #endif
 
 server::server(io::io_context& io_context, std::uint16_t port)
-    : io_context_(io_context), acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
+    : io_context_(io_context),
+      acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
+      interval_(INACTIVITY_TIMEOUT),
+      timer_(io_context_, interval_) {
+	timer_.async_wait(boost::bind(&server::pingClients, this));
+
 	command_handlers_ = {
 	    {"[ARE_YOU_ALIVE]",
 	     boost::bind(&server::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
@@ -27,8 +32,9 @@ server::server(io::io_context& io_context, std::uint16_t port)
 }
 
 void server::start() {
-	routine_future_ = std::async(std::launch::async, &server::pingClients,
-				     this);  // TODO: substitude this by boost::asio internal timeout clock
+	// routine_future_ = std::async(std::launch::async, &server::pingClients,
+	// 			     this);  // TODO: substitude this by boost::asio internal timeout clock
+
 	accept();
 }
 
@@ -43,7 +49,6 @@ void server::onAccept(err error_code) {
 	    std::make_pair(client_id, std::make_shared<session>(std::move(*socket_), io_context_, client_id)));
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
-	// client->send("SUCCESS\n");
 	PRINT("New client connected", "");
 
 	client->start(boost::bind(&server::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
@@ -159,32 +164,29 @@ void server::removeVictim(std::string& command, std::vector<std::string>& params
 }
 
 void server::pingClients() {
-	while (true) {
-		usleep(INACTIVITY_TIMEOUT);
+	std::vector<size_t> inactive_clients;
 
-		std::vector<size_t> inactive_clients;
+	for (auto& client : clients_sessions_container_) {
+		client.second->inactive_timeout_count_++;
 
-		for (auto& client : clients_sessions_container_) {
-			client.second->inactive_timeout_count_++;
+		if (client.second->inactive_timeout_count_ >= 3) {
+			client.second->send("Disconecting due to inactivity\n");
+			std::cout << "Disconecting " << client.second->endpoint_ << " due to inactivity" << std::endl;
 
-			if (client.second->inactive_timeout_count_ >= 3) {
-				client.second->send("Disconecting due to inactivity\n");
-				std::cout << "Disconecting " << client.second->endpoint_ << " due to inactivity" << std::endl;
-
-				inactive_clients.push_back(client.second->id_);
-				client.second->stop();
-			} else {
-				client.second->send(":msg [ARE_YOU_ALIVE]\n");
-			}
-		}
-		{
-			std::unique_lock<std::mutex> lock(clients_m_);
-			for (auto& client_id : inactive_clients) {
-				PRINT("ERASING ", client_id);
-				clients_sessions_container_.erase(client_id);
-			}
+			inactive_clients.push_back(client.second->id_);
+			client.second->stop();
+		} else {
+			client.second->send(":msg [ARE_YOU_ALIVE]\n");
 		}
 	}
+	{
+		std::unique_lock<std::mutex> lock(clients_m_);
+		for (auto& client_id : inactive_clients) {
+			clients_sessions_container_.erase(client_id);
+		}
+	}
+	timer_.expires_at(timer_.expires_at() + interval_);
+	timer_.async_wait(boost::bind(&server::pingClients, this));
 }
 
 void server::sendAllClients(std::string const& msg) {
@@ -197,7 +199,6 @@ size_t server::getClientId_() {
 	std::hash<long int> hasher;
 	size_t id = hasher(
 	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-	PRINT("Created hash", id);
 	return id;
 }
 

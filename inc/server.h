@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define INACTIVITY_TIMEOUT 1 * 1000000	// 1sec
+#define INACTIVITY_TIMEOUT 1  // 1 sec
 #include <unistd.h>
 
 #include <algorithm>
@@ -41,8 +41,10 @@ class server {
 
 	void sendAllClients(std::string const &);
 	void pingClients();
+	boost::posix_time::seconds interval_;
+	boost::asio::deadline_timer timer_;
 
-	std::future<void> routine_future_;
+	// std::future<void> routine_future_;
 
 	// Helpers
 	static size_t getClientId_();
