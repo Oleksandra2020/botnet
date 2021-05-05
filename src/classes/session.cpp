@@ -2,6 +2,7 @@
 
 session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
+    inactive_timeout_count_ = 1;
 }
 
 void session::start(on_msg_callback&& handler_func) {
