@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define INACTIVITY_TIMEOUT 1 * 1000000  // 1sec
+#define INACTIVITY_TIMEOUT 1 * 1000000	// 1sec
 #include <unistd.h>
 
 #include <algorithm>
@@ -15,7 +15,9 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
+#include <vector>
 
 #include "msg_parser.h"
 #include "session.h"
@@ -29,9 +31,25 @@ class server {
 	void start();
 
     private:
+	// Accepting new clients
 	void accept();
 	void onAccept(err error_code);
 
+	io::io_context &io_context_;
+	tcp::acceptor acceptor_;
+	std::optional<tcp::socket> socket_;
+
+	void sendAllClients(std::string const &);
+	void pingClients();
+
+	std::future<void> routine_future_;
+
+	// Helpers
+	static size_t getClientId_();
+	static bool isNumber_(const std::string &);
+	bool checkHash_(std::string &);
+
+	// Communication
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
 	void initManager(std::string &, std::vector<std::string> &params, session *client);
@@ -41,24 +59,10 @@ class server {
 	void removeVictim(std::string &, std::vector<std::string> &params, session *client);
 	void removeClient(std::string &, std::vector<std::string> &params, session *client);
 
-	void sendAllClients(std::string const &);
-	void pingClients();
-
-	long int generateId();
-	bool checkHash(std::string &);
-
-	std::future<void> routine_future_;
-
-	// Accepting new clients
-	io::io_context &io_context_;
-	tcp::acceptor acceptor_;
-	std::optional<tcp::socket> socket_;
-
-	// Clients handling
-	std::unordered_map<long int, std::shared_ptr<session>> clients_sessions_container_;
+	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
 	std::mutex clients_m_;
 	msg_parser msg_parser_;
-	std::unordered_map<std::string, std::function<void(std::string&, std::vector<std::string> &, session *)>>
+	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 
 	// Manager handling

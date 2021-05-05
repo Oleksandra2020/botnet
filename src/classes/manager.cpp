@@ -1,6 +1,5 @@
 #include "manager.h"
 
-#include "user_interface.h"
 
 manager::manager(io::io_context& io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port)
     : io_context_(io_context),
@@ -66,7 +65,8 @@ void manager::handleAlive(std::string& command, std::vector<std::string>& params
 void manager::handleInit(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
 	if (stoi(params[0])) {
-		std::cout << "\nConnected, press [ENTER].." << std::endl;  // TODO: should use conditional variable here to wait until connected to server
+		std::cout << "\nConnected, press [ENTER].."
+			  << std::endl;	 // TODO: should use conditional variable here to wait until connected to server
 	}
 }
 

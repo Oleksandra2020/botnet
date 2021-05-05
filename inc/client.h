@@ -35,6 +35,7 @@ class client {
 
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
+	void handleInit(std::string &, std::vector<std::string> &, session *);
 
 	io::io_context &io_context_;
 	tcp::acceptor acceptor_;

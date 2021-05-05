@@ -1,6 +1,6 @@
 #include "session.h"
 
-session::session(tcp::socket&& sock, io::io_service& io_context, int id) : socket_(std::move(sock)), io_context_(io_context) {
+session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
 }
 
@@ -40,7 +40,6 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 }
 
 void session::send(std::string const& data) {
-	// TODO: make it thread safe
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
 

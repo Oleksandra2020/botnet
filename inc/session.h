@@ -23,14 +23,14 @@ class session {
 	using on_err_callback = std::function<void()>;
 
     public:
-	session(tcp::socket&&, io::io_context&, int);
+	session(tcp::socket&&, io::io_context&, size_t);
 
 	void start(on_msg_callback&& onMsg);
 	void stop();
 	void send(std::string const&);
 
 	void read();
-	int id_;
+	size_t id_;
 	bool idle_;
 	int inactive_timeout_count_;
 	int threads_;

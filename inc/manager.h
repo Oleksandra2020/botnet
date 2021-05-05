@@ -1,5 +1,5 @@
-#ifndef BOTNET_CLIENT_CLIENT_H
-#define BOTNET_CLIENT_CLIENT_H
+#ifndef BOTNET_ADMIN_CLIENT_H
+#define BOTNET_ADMIN_CLIENT_H
 
 #include <unistd.h>
 
@@ -21,6 +21,7 @@
 #include "session.h"
 #include "user_interface.h"
 
+
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
 using err = boost::system::error_code;
@@ -31,19 +32,10 @@ class manager {
 	void start();
 
     private:
+	// Server connection
 	void accept();
 	void onAccept(err error_code);
 
-	void handleResponse(std::string &, session *);
-	void handleAlive(std::string &, std::vector<std::string> &, session *);
-	void handleInit(std::string &, std::vector<std::string> &, session *);
-	void handleGetBots(std::string &, std::vector<std::string> &, session *);
-	void handleGetIps(std::string &, std::vector<std::string> &, session *);
-
-	void getBots();
-	void getIps();
-
-	// Server session
 	io::io_context &io_context_;
 	tcp::acceptor acceptor_;
 	std::optional<tcp::socket> socket_;
@@ -52,14 +44,23 @@ class manager {
 	std::vector<std::shared_ptr<session>> server_session_container_;
 
 	// Communication
+	void handleResponse(std::string &, session *);
+	void handleAlive(std::string &, std::vector<std::string> &, session *);
+	void handleInit(std::string &, std::vector<std::string> &, session *);
+	void handleGetBots(std::string &, std::vector<std::string> &, session *);
+	void handleGetIps(std::string &, std::vector<std::string> &, session *);
+
 	msg_parser msg_parser_;
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 	std::string passphrase_;
 
-	// Interaction
+	// Interface
+	void getBots();
+	void getIps();
+
 	user_interface interactive_;
 	std::future<void> ui_start_;
 };
 
-#endif	// BOTNET_CLIENT_CLIENT_H
+#endif	// BOTNET_ADMIN_CLIENT_H

