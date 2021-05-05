@@ -27,8 +27,6 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 }
 
 void manager::start() {
-	ui_start_ = std::async(std::launch::async, &user_interface::start, &interactive_);
-
 	tcp::socket socket(io_context_);
 	socket_ = std::move(socket);
 
@@ -64,8 +62,7 @@ void manager::handleAlive(std::string& command, std::vector<std::string>& params
 void manager::handleInit(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
 	if (stoi(params[0])) {
-		std::cout << "\nConnected, press [ENTER].."
-			  << std::endl;	 // TODO: should use conditional variable here to wait until connected to server
+		ui_start_ = std::async(std::launch::async, &user_interface::start, &interactive_);
 	}
 }
 

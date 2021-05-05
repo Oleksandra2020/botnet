@@ -1,5 +1,7 @@
 #include "user_interface.h"
 
+#include <ncurses.h>
+
 user_interface::user_interface() {
 	initscr();
 	noecho();
@@ -11,15 +13,28 @@ user_interface::~user_interface() { endwin(); }
 
 void user_interface::initWindows() {
 	victim_list_window_ = newwin((screen_heigth_ / 2), (screen_width_ * 2 / 3), 0, 0);
-	box(victim_list_window_, 0, 0);
-	mvwprintw(victim_list_window_, 0, 1, "[VICTIMS]");
+	reRenderVictimsWindow();
 
 	control_window_ = newwin((screen_heigth_ / 2), (screen_width_ * 2 / 3), (screen_heigth_ / 2), 0);
 	keypad(control_window_, true);
-	box(control_window_, 0, 0);
-	mvwprintw(control_window_, 0, 1, "[CONTROLS]");
+	reRenderMenuWindow();
 
 	bot_list_window_ = newwin(screen_heigth_, (screen_width_ / 3), 0, (screen_width_ * 2 / 3));
+	reRenderBotsWindow();
+}
+
+void user_interface::reRenderVictimsWindow() {
+	werase(victim_list_window_);
+	box(victim_list_window_, 0, 0);
+	mvwprintw(victim_list_window_, 0, 1, "[VICTIMS]");
+}
+void user_interface::reRenderMenuWindow() {
+	werase(control_window_);
+	box(control_window_, 0, 0);
+	mvwprintw(control_window_, 0, 1, "[CONTROLS]");
+}
+void user_interface::reRenderBotsWindow() {
+	werase(bot_list_window_);
 	box(bot_list_window_, 0, 0);
 	mvwprintw(bot_list_window_, 0, 1, "[BOTS]");
 }
@@ -69,7 +84,7 @@ void user_interface::start() {
 }
 
 void user_interface::loadLogo() {
-	const std::string output = "Connecting to the server...";
+	const std::string output = "Connected to the server! Press [ENTER] to continue...";
 	move(screen_heigth_ / 2, (screen_width_ - output.size()) / 2);
 	printw(output.c_str());
 	getch();
@@ -77,16 +92,18 @@ void user_interface::loadLogo() {
 
 void user_interface::updateWindow(WINDOW* wind, std::vector<std::string>& items) {
 	std::unique_lock<std::mutex> lock(ui_update_m_);
-	for (int i = 0; i < screen_heigth_ - 2; ++i) {
-		if (i < items.size()) {
-			mvwprintw(wind, i + 1, 1, ("* " + items[i]).c_str());
-		} else {
-			mvwprintw(wind, i + 1, 1, std::string(20, ' ').c_str());
-		}
+	for (int i = 0; i < items.size(); ++i) {
+		mvwprintw(wind, i + 1, 1, ("* " + items[i]).c_str());
 	}
 	wrefresh(wind);
 }
 
-void user_interface::updateBots(std::vector<std::string>& data) { updateWindow(bot_list_window_, data); }
+void user_interface::updateBots(std::vector<std::string>& data) {
+	reRenderBotsWindow();
+	updateWindow(bot_list_window_, data);
+}
 
-void user_interface::updateVictims(std::vector<std::string>& data) { updateWindow(victim_list_window_, data); }
+void user_interface::updateVictims(std::vector<std::string>& data) {
+	reRenderVictimsWindow();
+	updateWindow(victim_list_window_, data);
+}

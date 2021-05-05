@@ -9,8 +9,8 @@
 #include <mutex>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 class user_interface {
     public:
@@ -28,6 +28,9 @@ class user_interface {
     private:
 	void loadLogo();
 	void initWindows();
+	void reRenderVictimsWindow();
+	void reRenderBotsWindow();
+	void reRenderMenuWindow();
 	void updateWindow(WINDOW*, std::vector<std::string>&);
 	std::vector<std::string> victims_ips_;
 	std::vector<std::string> bots_ips_;

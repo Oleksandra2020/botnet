@@ -20,7 +20,7 @@
 
 #define SERVER_LOCAL_PORT_NUMBER 2772
 #define SERVER_PUBLIC_PORT_NUMBER 3916
-#define SERVER_IP "1.1.1.1"
+#define SERVER_IP ""
 
 #define THREAD_NUM 12
 
@@ -37,7 +37,6 @@ int main(int argc, char* argv[]) {
 		return NO_EXECUTION_MODE;
 	}
 
-
 	if (std::string(argv[1]) == "server") {
 		PRINT("Running as a server...")
 
@@ -45,9 +44,8 @@ int main(int argc, char* argv[]) {
 		server tcp_server(io_context, SERVER_LOCAL_PORT_NUMBER);
 		tcp_server.start();
 		io_context.run();
-        return 0;
+		return 0;
 	}
-
 
 	if (SERVER_IP == "") {
 		ERROR("Missing public server port!");
@@ -58,7 +56,6 @@ int main(int argc, char* argv[]) {
 		return MISSING_LOCAL_PORT;
 	}
 
-
 	if (std::string(argv[1]) == "client") {
 		PRINT("Running as a client...")
 
@@ -68,7 +65,7 @@ int main(int argc, char* argv[]) {
 		client client_tcp(io_context, atoi(argv[2]), SERVER_IP, SERVER_PUBLIC_PORT_NUMBER, &victims);
 		client_tcp.start();
 		io_context.run();
-        return 0;
+		return 0;
 	}
 	if (std::string(argv[1]) == "admin") {
 		PRINT("Running as an admin...")
@@ -77,6 +74,6 @@ int main(int argc, char* argv[]) {
 		manager admin_tcp(io_context, atoi(argv[1]), SERVER_IP, SERVER_PUBLIC_PORT_NUMBER);
 		admin_tcp.start();
 		io_context.run();
-        return 0;
+		return 0;
 	}
 }
