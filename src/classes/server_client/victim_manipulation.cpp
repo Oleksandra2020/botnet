@@ -22,13 +22,22 @@ void victims::add_http_victim(const char* host_name)
     pool.enqueue(ports_ips);
 }
 
-void victims::remove_victim(const char* dest_ip, const char* dest_port)
+void victims::remove_tcp_victim(const char* dest_ip, const char* dest_port)
 {
     src_dst to_remove{};
     to_remove.source_ip = source_ip;
     to_remove.source_port = source_port;
     to_remove.dest_ip = dest_ip;
     to_remove.dest_port = dest_port;
+    pool.remove_victim(to_remove);
+}
+
+void victims::remove_http_victim(const char* host_name)
+{
+    src_dst to_remove{};
+    to_remove.source_ip = source_ip;
+    to_remove.source_port = source_port;
+    to_remove.host_name = host_name;
     pool.remove_victim(to_remove);
 }
 
