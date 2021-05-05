@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class user_interface {
     public:
