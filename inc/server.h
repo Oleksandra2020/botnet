@@ -1,7 +1,10 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define INACTIVITY_TIMEOUT 1  // 1 sec
+#define INACTIVITY_TIMEOUT 1  // 1 second
+#define INACTIVE_COUNTER_MAX 10
+#define NONE_PARAMETERS ""
+
 #include <unistd.h>
 
 #include <algorithm>
@@ -17,6 +20,7 @@
 #include <optional>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "msg_parser.h"
@@ -25,7 +29,17 @@
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
 using err = boost::system::error_code;
+
 class server {
+	struct bot_info {
+		int victims = 0;
+		long int msgs_from = 0;
+		size_t id;
+		int ping;
+		int inactive_counter;
+		std::string connected;
+	};
+
     public:
 	server(io::io_context &, std::uint16_t);
 	void start();
@@ -44,25 +58,25 @@ class server {
 	boost::posix_time::seconds interval_;
 	boost::asio::deadline_timer timer_;
 
-	// std::future<void> routine_future_;
-
 	// Helpers
 	static size_t getClientId_();
 	static bool isNumber_(const std::string &);
 	bool checkHash_(std::string &);
+	const std::string getCurrentDateTime_();
+	void updateMsgCounter_(session *);
 
 	// Communication
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
-	void initManager(std::string &, std::vector<std::string> &params, session *client);
-	void getClients(std::string &, std::vector<std::string> &params, session *client);
-	void getVictims(std::string &, std::vector<std::string> &params, session *client);
-	void addVictim(std::string &, std::vector<std::string> &params, session *client);
-	void removeVictim(std::string &, std::vector<std::string> &params, session *client);
+	void handleInit(std::string &, std::vector<std::string> &params, session *client);
+	void getClientsData(std::string &, std::vector<std::string> &params, session *client);
 	void removeClient(std::string &, std::vector<std::string> &params, session *client);
 
+	std::mutex clients_data_m_;
+	std::mutex clients_session_m_;
 	std::unordered_map<size_t, std::unique_ptr<session>> clients_sessions_container_;
-	std::mutex clients_m_;
+	std::unordered_map<std::string, bot_info> clients_data_container_;
+
 	msg_parser msg_parser_;
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;

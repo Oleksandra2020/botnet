@@ -31,7 +31,6 @@ add_executable(${PROJECT_NAME} ${SRC}/main.cpp ${HEADERS} ${CLASSES})
 find_package(Threads)
 target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
-
 # Boost.Asio
 find_package(Boost 1.71 REQUIRED COMPONENTS
             system)       
@@ -42,3 +41,8 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads)
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARY})
+
+# TBB
+find_package(TBB REQUIRED COMPONENTS tbb)
+include_directories(${TBB_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} TBB::tbb)

@@ -33,9 +33,10 @@ class session {
 	void read();
 	size_t id_;
 	bool idle_;
-	int inactive_timeout_count_;
 	int threads_;
+	int inactive_timeout_count_;
 	tcp::endpoint endpoint_;
+	std::string ip_;
 
     private:
 	void write();

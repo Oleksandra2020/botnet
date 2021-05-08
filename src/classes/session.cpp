@@ -2,6 +2,7 @@
 
 session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
+	ip_ = "";
 	inactive_timeout_count_ = 1;
 }
 session::~session() { stop(); }
@@ -21,19 +22,22 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
 	if (!error_code) {
 		std::string output;
-		std::stringstream tmp;
+		std::stringstream output_stream;
+
 		output.resize(bytes_transferred);
-
-		tmp << std::istream(&buffer_).rdbuf();
-		tmp.read(&output[0], bytes_transferred);
+		output_stream << std::istream(&buffer_).rdbuf();
+		output_stream.read(&output[0], bytes_transferred);
 		output = output.substr(0, output.size() - 1);
-
-		endpoint_ = socket_.remote_endpoint(error_code);
-
 		buffer_.consume(bytes_transferred);
 
-		on_message_callback_(output, this);
+		endpoint_ = socket_.remote_endpoint(error_code);
+		if (ip_ == "") {
+			std::ostringstream ip_stream;
+			ip_stream << endpoint_;
+			ip_ = ip_stream.str();
+		}
 
+		on_message_callback_(output, this);
 		read();
 	} else {
 		socket_.close(error_code);

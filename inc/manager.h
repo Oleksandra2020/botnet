@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
@@ -20,7 +21,6 @@
 #include "msg_parser.h"
 #include "session.h"
 #include "user_interface.h"
-
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
@@ -47,17 +47,17 @@ class manager {
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
 	void handleInit(std::string &, std::vector<std::string> &, session *);
-	void handleGetBots(std::string &, std::vector<std::string> &, session *);
+	void handleGetBotsData(std::string &, std::vector<std::string> &, session *);
 	void handleGetIps(std::string &, std::vector<std::string> &, session *);
 
 	msg_parser msg_parser_;
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 	std::string passphrase_;
+	std::vector<std::string> bot_ip_addresses_;
 
 	// Interface
-	void getBots();
-	void getIps();
+	void getBotsData();
 
 	user_interface interactive_;
 	std::future<void> ui_start_;
