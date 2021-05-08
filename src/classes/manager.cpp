@@ -81,9 +81,9 @@ void manager::handleGetBotsData(std::string& command, std::vector<std::string>& 
 	}
 
 	std::vector<std::string> data_output;
-	std::string separator = std::string(10, ' ');
+	std::string separator = std::string(5, ' ');
 
-	for (int i = 1 + parameters_num ; i < params.size(); ++i) {
+	for (int i = 1 + parameters_num; i < params.size(); ++i) {
 		std::vector<std::string> line;
 
 		for (int j = 0; j < parameters_num; ++j) {
@@ -92,8 +92,10 @@ void manager::handleGetBotsData(std::string& command, std::vector<std::string>& 
 		data_output.push_back(boost::algorithm::join(line, separator));
 		i += parameters_num - 1;
 	}
-	interactive_.updateBots(data_output);
-    interactive_.updateTitles(params, max_value_size, separator);
+	interactive_.bots_data_ = std::move(data_output);
+
+	interactive_.updateBots();
+	interactive_.updateTitles(params, max_value_size, separator);
 }
 
 void manager::getBotsData() {

@@ -15,7 +15,7 @@ void user_interface::loadLogo() {
 	const std::string output = "Connected to the server! Press [ENTER] to continue...";
 	move(screen_heigth_ / 2, (screen_width_ - output.size()) / 2);
 	printw(output.c_str());
-	getch();  // TODO: load real ascii logo
+	getch();
 }
 
 void user_interface::initWindows() {
@@ -24,12 +24,22 @@ void user_interface::initWindows() {
 	keypad(main_window_, true);
 
 	help_commands_window_ = newwin(2, screen_width_, screen_heigth_ - 2, 0);
+
+	int x_pos = 1;
+	int y_pos = 0;
+	for (auto& item : commands_info_) {
+		mvwprintw(help_commands_window_, y_pos, x_pos, item.c_str());
+		x_pos += item.size() + 2;
+		if (x_pos > screen_width_) {
+			x_pos = 1;
+			y_pos++;
+		}
+	}
 }
 
 void user_interface::reRenderMainWindowBox() {
 	werase(main_window_);
 	box(main_window_, 0, 0);
-	// mvwprintw(main_window_, 0, 1, "[VICTIMS]");
 }
 
 void user_interface::start() {
@@ -38,50 +48,43 @@ void user_interface::start() {
 
 	wrefresh(main_window_);
 	wrefresh(help_commands_window_);
-	int choice;
-	while (true) {
-		choice = wgetch(main_window_);
-		if (choice == 'u') {
-			menu_handlers_["u"]();
-		}
-	}
-	// std::vector<std::string> choices;
-	// choices.reserve(menu_handlers_.size());
-	// for (auto kv : menu_handlers_) {
-	// 	choices.push_back(kv.first);
-	// }
 
-	// int choice;
-	// int current = 0;
-
-	// while (true) {
-	// 	for (int i = 0; i < choices.size(); ++i) {
-	// 		if (i == current) {
-	// 			wattron(main_window_, A_REVERSE);
-	// 		}
-	// 		mvwprintw(main_window_, i + 1, 1, choices[i].c_str());
-	// 		wattroff(main_window_, A_REVERSE);
-	// 	}
-	// 	choice = wgetch(main_window_);
-	// 	if (choice == KEY_UP || choice == 'k') {
-	// 		--current;
-	// 		if (current == -1) {
-	// 			++current;
-	// 		};
-	// 	}
-	// 	if (choice == KEY_DOWN || choice == 'j') {
-	// 		++current;
-	// 		if (current >= choices.size()) {
-	// 			--current;
-	// 		};
-	// 	}
-	// 	if (choice == 10) {
-	// 		menu_handlers_[choices[current]]();
-	// 	}
-	// }
+	mainMenuSelector();
 }
 
-void user_interface::updateWindow(WINDOW* wind, std::vector<std::string>& items) {
+void user_interface::mainMenuSelector() {
+	int choice;
+	int current = 0;
+
+	while (true) {
+		for (int i = 0; i < bots_data_.size(); ++i) {
+			if (i == current) {
+				wattron(main_window_, A_REVERSE);
+			}
+			mvwprintw(main_window_, i + 1, 1, bots_data_[i].c_str());
+			wattroff(main_window_, A_REVERSE);
+		}
+		choice = wgetch(main_window_);
+		if (choice == KEY_UP || choice == 'k') {
+			--current;
+			if (current == -1) {
+				++current;
+			};
+		}
+		if (choice == KEY_DOWN || choice == 'j') {
+			++current;
+			if (current >= bots_data_.size()) {
+				--current;
+			};
+		}
+		if (choice == 'u') {
+			menu_handlers_["u"]();
+			break;
+		}
+	}
+	mainMenuSelector();
+}
+void user_interface::fillWindow(WINDOW* wind, std::vector<std::string>& items) {
 	std::unique_lock<std::mutex> lock(ui_update_m_);
 	for (int i = 0; i < items.size(); ++i) {
 		mvwprintw(wind, i + 1, 1, (items[i]).c_str());
@@ -89,10 +92,9 @@ void user_interface::updateWindow(WINDOW* wind, std::vector<std::string>& items)
 	wrefresh(wind);
 }
 
-void user_interface::updateBots(std::vector<std::string>& data) {
+void user_interface::updateBots() {
 	reRenderMainWindowBox();
-	updateWindow(main_window_, data);
-    // mvwprintw(main_window_, 0, 1, "[List of active bots]");
+	fillWindow(main_window_, bots_data_);
 	wrefresh(main_window_);
 }
 
@@ -100,9 +102,9 @@ void user_interface::updateTitles(std::vector<std::string>& params, std::vector<
 	int parameters_num = stoi(params[0]);
 	int x_spaces = 1;
 	for (int i = 1; i < 1 + parameters_num; ++i) {
-        // std::cout << "HELLO" << std::endl;
-        mvwprintw(main_window_, 0, x_spaces, params[i].c_str());
-        x_spaces += max_sizes[i-1] + separator.size(); 
+		mvwprintw(main_window_, 0, x_spaces, params[i].c_str());
+		x_spaces += max_sizes[i - 1] + separator.size();
 	}
 	wrefresh(main_window_);
+	wmove(main_window_, screen_heigth_, screen_width_);
 }
