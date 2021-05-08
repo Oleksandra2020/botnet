@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/Users/markiyanvalyavka/cpp_projects/test_ping/icmp_header.hpp
+/Users/markiyanvalyavka/cpp_projects/botnet_client/icmp_header.hpp
 istream
 -
 ostream
@@ -14,13 +14,13 @@ ostream
 algorithm
 -
 
-/Users/markiyanvalyavka/cpp_projects/test_ping/ipv4_header.hpp
+/Users/markiyanvalyavka/cpp_projects/botnet_client/ipv4_header.hpp
 algorithm
 -
 asio/ip/address_v4.hpp
 -
 
-/Users/markiyanvalyavka/cpp_projects/test_ping/main.cpp
+/Users/markiyanvalyavka/cpp_projects/botnet_client/main.cpp
 boost/asio.hpp
 -
 boost/bind.hpp
@@ -31,10 +31,16 @@ iostream
 -
 ostream
 -
+thread
+-
+chrono
+-
+future
+-
 icmp_header.hpp
-/Users/markiyanvalyavka/cpp_projects/test_ping/icmp_header.hpp
+/Users/markiyanvalyavka/cpp_projects/botnet_client/icmp_header.hpp
 ipv4_header.hpp
-/Users/markiyanvalyavka/cpp_projects/test_ping/ipv4_header.hpp
+/Users/markiyanvalyavka/cpp_projects/botnet_client/ipv4_header.hpp
 
 /usr/local/include/asio/detail/array.hpp
 asio/detail/config.hpp

@@ -13,9 +13,14 @@
 #include <istream>
 #include <iostream>
 #include <ostream>
+#include <thread>
+#include <chrono>
+#include <future>
+
 
 #include "icmp_header.hpp"
 #include "ipv4_header.hpp"
+
 
 using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
@@ -24,18 +29,65 @@ namespace posix_time = boost::posix_time;
 class pinger
 {
 public:
-    pinger(boost::asio::io_service& io_service, const char* destination)
+    pinger(boost::asio::io_service& io_service)
             : resolver_(io_service), socket_(io_service, icmp::v4()),
               timer_(io_service), sequence_number_(0), num_replies_(0)
-    {
-        icmp::resolver::query query(icmp::v4(), destination, "");
-        destination_ = *resolver_.resolve(query);
+    {}
 
-        start_send();
-        start_receive();
+    int get_latency(const char* dest) {
+
+      int latency_ms;
+      icmp::resolver::query query(icmp::v4(), dest, "");
+      destination_ = *resolver_.resolve(query);
+
+      start_send();
+
+
+      //start_receive();
+
+      auto latency_ftr = std::async(&pinger::start_receive, this);
+//
+//      int max_tries = 10;
+//      int cur_try = 0;
+//      while(ms_ == 0){
+//        if (cur_try >= max_tries) {
+//          return -1;
+//        }
+//        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+//        std::cout << "Sleeping for 1 sec" << std::endl;
+//        cur_try += 1;
+//      }
+
+      if (latency_ftr.wait_for(std::chrono::seconds(3)) == std::future_status::ready) {
+        latency_ms = latency_ftr.get();
+      } else {
+        latency_ms = -1;
+      }
+
+      return latency_ms;
+
     }
 
+
+
 private:
+
+    int start_receive()
+    {
+      // Discard any data already in the buffer.
+      reply_buffer_.consume(reply_buffer_.size());
+
+      // Wait for a reply. We prepare the buffer to receive up to 64KB.
+//      socket_.async_receive(reply_buffer_.prepare(65536),
+//                            boost::bind(&pinger::handle_receive, this, _2));
+//      timer_.expires_at(time_sent_ + posix_time::seconds(5));
+//      timer_.async_wait(boost::bind(&pinger::handle_timeout, this, _1));
+
+      int length = socket_.receive(reply_buffer_.prepare(65536));
+      return handle_receive(length);
+    }
+
+
     void start_send()
     {
         std::string body("\"Hello!\" from Asio ping.");
@@ -59,32 +111,40 @@ private:
 
         // Wait up to five seconds for a reply.
         num_replies_ = 0;
-        timer_.expires_at(time_sent_ + posix_time::seconds(5));
-        timer_.async_wait(boost::bind(&pinger::handle_timeout, this));
+
     }
 
-    void handle_timeout()
+    void handle_gotresponse()
     {
-        if (num_replies_ == 0)
-            std::cout << "Request timed out" << std::endl;
 
-        // Requests must be sent no less than one second apart.
-        timer_.expires_at(time_sent_ + posix_time::seconds(1));
-        timer_.async_wait(boost::bind(&pinger::start_send, this));
+      std::cout << "Got response, stop reading async" << std::endl;
+      socket_.cancel();
+      timer_.cancel();
+
     }
 
-    void start_receive()
+    void handle_timeout(const boost::system::error_code& e)
     {
-        // Discard any data already in the buffer.
-        reply_buffer_.consume(reply_buffer_.size());
+        socket_.cancel();
+        if (e != boost::asio::error::operation_aborted) {
+          std::cout << "Request timed out" << std::endl;
+          socket_.cancel();
+        }
 
-        // Wait for a reply. We prepare the buffer to receive up to 64KB.
-        socket_.async_receive(reply_buffer_.prepare(65536),
-                              boost::bind(&pinger::handle_receive, this, _2));
+
+
     }
 
-    void handle_receive(std::size_t length)
+    int handle_receive(std::size_t length)
     {
+
+
+
+
+        socket_.cancel();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
         // The actual number of bytes received is committed to the buffer so that we
         // can extract it using a std::istream object.
         reply_buffer_.commit(length);
@@ -114,9 +174,13 @@ private:
                       << ", ttl=" << ipv4_hdr.time_to_live()
                       << ", time=" << (now - time_sent_).total_milliseconds() << " ms"
                       << std::endl;
+
+            return (now - time_sent_).total_milliseconds();
+        } else {
+
+            return -1;
         }
 
-        start_receive();
     }
 
     static unsigned short get_identifier()
@@ -136,27 +200,36 @@ private:
     posix_time::ptime time_sent_;
     boost::asio::streambuf reply_buffer_;
     std::size_t num_replies_;
+    std::size_t msg_length_;
+    int ms_;
 };
+
+
 
 int main(int argc, char* argv[])
 {
     try
     {
-        if (argc != 2)
-        {
-            std::cerr << "Usage: ping <host>" << std::endl;
-#if !defined(BOOST_WINDOWS)
-            std::cerr << "(You may need to run this program as root.)" << std::endl;
-#endif
-            return 1;
-        }
 
+      //std::cout << "fdsfs";
         boost::asio::io_service io_service;
-        pinger p(io_service, argv[1]);
+        pinger p(io_service);
+//
+        std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
+
+        //  std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
+        //std::cout << p.get_latency("8.8.8.81");
+
         io_service.run();
     }
     catch (std::exception& e)
     {
+
+
+
+
+
+
         std::cerr << "Exception: " << e.what() << std::endl;
     }
 }
