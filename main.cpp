@@ -42,17 +42,19 @@ public:
       icmp::resolver::query query(icmp::v4(), dest, "");
       destination_ = *resolver_.resolve(query);
 
+      // Send packet
       start_send();
+      //Clear buffer
       reply_buffer_.consume(reply_buffer_.size());
 
-      // Wait for a reply. We prepare the buffer to receive up to 64KB.
+
+      // Wait for a reply.
       std::future<std::size_t> length_read_ftr = socket_.async_receive(reply_buffer_.prepare(65536),
                                                                        boost::asio::use_future);
-      socket_.cancel();
+
       int length_read = length_read_ftr.get();
 
       latency_ms = handle_receive(length_read);
-
       return latency_ms;
     }
 
@@ -60,22 +62,20 @@ public:
 
 private:
 
-    int start_receive()
-    {
-      // Discard any data already in the buffer.
-      reply_buffer_.consume(reply_buffer_.size());
-
-      // Wait for a reply. We prepare the buffer to receive up to 64KB.
-      std::future<std::size_t> length_read_ftr = socket_.async_receive(reply_buffer_.prepare(65536),
-                                                                       boost::asio::use_future);
-      socket_.cancel();
-
-      int length_read = length_read_ftr.get();
-
-
-//      int length = socket_.receive(reply_buffer_.prepare(65536));
-      return 1;
-    }
+//    int start_receive()
+//    {
+//      // Discard any data already in the buffer.
+//      reply_buffer_.consume(reply_buffer_.size());
+//
+//      // Wait for a reply. We prepare the buffer to receive up to 64KB.
+//      std::future<std::size_t> length_read_ftr = socket_.async_receive(reply_buffer_.prepare(65536),
+//                                                                       boost::asio::use_future);
+//
+//      int length_read = length_read_ftr.get();
+//
+//
+//      return 1;
+//    }
 
 
     void start_send()
@@ -109,17 +109,13 @@ private:
     void handle_timeout(const boost::system::error_code& e)
     {
       socket_.cancel();
-//      if (e != boost::asio::error::operation_aborted) {
-//        std::cout << "Request timed out" << std::endl;
-//        socket_.cancel();
-//      }
     }
 
 
 
     int handle_receive(std::size_t length)
     {
-        //socket_.cancel();
+        socket_.cancel();
 
         // The actual number of bytes received is committed to the buffer so that we
         // can extract it using a std::istream object.
@@ -184,28 +180,18 @@ private:
 
 int main(int argc, char* argv[])
 {
-//    try
-//    {
+
         boost::asio::io_service io_service;
         boost::asio::io_service::work work(io_service);
         std::thread thread([&io_service](){ io_service.run(); });
 
-        //boost::asio::io_service io_service;
+
         pinger p(io_service);
-//
         std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
 
 
-        //  std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
-        //std::cout << p.get_latency("8.8.8.81");
 
-//        //io_service.run();
         io_service.stop();
         thread.join();
-//
-//    }
-//    catch (std::exception& e)
-//    {
-//        std::cerr << "Exception: " << e << std::endl;
-//    }
+
 }
