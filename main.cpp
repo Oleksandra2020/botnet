@@ -10,6 +10,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <istream>
 #include <iostream>
 #include <ostream>
@@ -36,36 +37,23 @@ public:
 
     int get_latency(const char* dest) {
 
-      int latency_ms;
+
+      int latency_ms = 0;
       icmp::resolver::query query(icmp::v4(), dest, "");
       destination_ = *resolver_.resolve(query);
 
       start_send();
+      reply_buffer_.consume(reply_buffer_.size());
 
+      // Wait for a reply. We prepare the buffer to receive up to 64KB.
+      std::future<std::size_t> length_read_ftr = socket_.async_receive(reply_buffer_.prepare(65536),
+                                                                       boost::asio::use_future);
+      socket_.cancel();
+      int length_read = length_read_ftr.get();
 
-      //start_receive();
-
-      auto latency_ftr = std::async(&pinger::start_receive, this);
-//
-//      int max_tries = 10;
-//      int cur_try = 0;
-//      while(ms_ == 0){
-//        if (cur_try >= max_tries) {
-//          return -1;
-//        }
-//        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-//        std::cout << "Sleeping for 1 sec" << std::endl;
-//        cur_try += 1;
-//      }
-
-      if (latency_ftr.wait_for(std::chrono::seconds(3)) == std::future_status::ready) {
-        latency_ms = latency_ftr.get();
-      } else {
-        latency_ms = -1;
-      }
+      latency_ms = handle_receive(length_read);
 
       return latency_ms;
-
     }
 
 
@@ -78,13 +66,15 @@ private:
       reply_buffer_.consume(reply_buffer_.size());
 
       // Wait for a reply. We prepare the buffer to receive up to 64KB.
-//      socket_.async_receive(reply_buffer_.prepare(65536),
-//                            boost::bind(&pinger::handle_receive, this, _2));
-//      timer_.expires_at(time_sent_ + posix_time::seconds(5));
-//      timer_.async_wait(boost::bind(&pinger::handle_timeout, this, _1));
+      std::future<std::size_t> length_read_ftr = socket_.async_receive(reply_buffer_.prepare(65536),
+                                                                       boost::asio::use_future);
+      socket_.cancel();
 
-      int length = socket_.receive(reply_buffer_.prepare(65536));
-      return handle_receive(length);
+      int length_read = length_read_ftr.get();
+
+
+//      int length = socket_.receive(reply_buffer_.prepare(65536));
+      return 1;
     }
 
 
@@ -111,39 +101,25 @@ private:
 
         // Wait up to five seconds for a reply.
         num_replies_ = 0;
-
-    }
-
-    void handle_gotresponse()
-    {
-
-      std::cout << "Got response, stop reading async" << std::endl;
-      socket_.cancel();
-      timer_.cancel();
+        timer_.expires_at(time_sent_ + posix_time::seconds(5));
+        timer_.async_wait(boost::bind(&pinger::handle_timeout, this, _1));
 
     }
 
     void handle_timeout(const boost::system::error_code& e)
     {
-        socket_.cancel();
-        if (e != boost::asio::error::operation_aborted) {
-          std::cout << "Request timed out" << std::endl;
-          socket_.cancel();
-        }
-
-
-
+      socket_.cancel();
+//      if (e != boost::asio::error::operation_aborted) {
+//        std::cout << "Request timed out" << std::endl;
+//        socket_.cancel();
+//      }
     }
+
+
 
     int handle_receive(std::size_t length)
     {
-
-
-
-
-        socket_.cancel();
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        //socket_.cancel();
 
         // The actual number of bytes received is committed to the buffer so that we
         // can extract it using a std::istream object.
@@ -181,6 +157,8 @@ private:
             return -1;
         }
 
+
+
     }
 
     static unsigned short get_identifier()
@@ -199,37 +177,35 @@ private:
     unsigned short sequence_number_;
     posix_time::ptime time_sent_;
     boost::asio::streambuf reply_buffer_;
-    std::size_t num_replies_;
-    std::size_t msg_length_;
-    int ms_;
+    int num_replies_;
 };
 
 
 
 int main(int argc, char* argv[])
 {
-    try
-    {
-
-      //std::cout << "fdsfs";
+//    try
+//    {
         boost::asio::io_service io_service;
+        boost::asio::io_service::work work(io_service);
+        std::thread thread([&io_service](){ io_service.run(); });
+
+        //boost::asio::io_service io_service;
         pinger p(io_service);
 //
         std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
 
+
         //  std::cout << p.get_latency("8.8.8.8") << "ms" << std::endl;
         //std::cout << p.get_latency("8.8.8.81");
 
-        io_service.run();
-    }
-    catch (std::exception& e)
-    {
-
-
-
-
-
-
-        std::cerr << "Exception: " << e.what() << std::endl;
-    }
+//        //io_service.run();
+        io_service.stop();
+        thread.join();
+//
+//    }
+//    catch (std::exception& e)
+//    {
+//        std::cerr << "Exception: " << e << std::endl;
+//    }
 }

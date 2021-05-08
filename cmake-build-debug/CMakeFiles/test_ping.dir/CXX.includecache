@@ -25,6 +25,8 @@ boost/asio.hpp
 -
 boost/bind.hpp
 -
+boost/enable_shared_from_this.hpp
+-
 istream
 -
 iostream
@@ -10970,6 +10972,10 @@ bitset
 boost/config/workaround.hpp
 -
 
+/usr/local/include/boost/enable_shared_from_this.hpp
+boost/smart_ptr/enable_shared_from_this.hpp
+-
+
 /usr/local/include/boost/exception/exception.hpp
 boost/config.hpp
 -
@@ -16798,6 +16804,18 @@ boost/config/pragma_message.hpp
 boost/smart_ptr/detail/sp_thread_pause.hpp
 -
 boost/smart_ptr/detail/sp_thread_sleep.hpp
+-
+boost/config.hpp
+-
+
+/usr/local/include/boost/smart_ptr/enable_shared_from_this.hpp
+boost/smart_ptr/weak_ptr.hpp
+-
+boost/smart_ptr/shared_ptr.hpp
+-
+boost/smart_ptr/detail/sp_noexcept.hpp
+-
+boost/assert.hpp
 -
 boost/config.hpp
 -
