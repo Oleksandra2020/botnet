@@ -28,7 +28,7 @@ class user_interface {
 	std::vector<std::string> main_window_menu_options_;
 
 	std::function<void()> get_bots_data_callback_;
-	std::function<void(int)> remove_bot_callback_;
+	std::function<void(std::string&)> remove_bot_callback_;
 
     private:
 	void loadLogo();
@@ -41,10 +41,6 @@ class user_interface {
 
 	WINDOW* main_window_;
 	WINDOW* help_commands_window_;
-
-    // int main_window_selector_offset = 0;
-
-	// int visible_; 
 
 	int screen_width_;
 	int screen_heigth_;

@@ -5,7 +5,6 @@ user_interface::user_interface() {
 	noecho();
 	cbreak();
 	getmaxyx(stdscr, screen_heigth_, screen_width_);
-	// visible = screen_heigth_ - 4;
 }
 
 user_interface::~user_interface() { endwin(); }
@@ -49,25 +48,10 @@ void user_interface::initWindows() {
 void user_interface::mainWindowSelector() {
 	int choice;
 	int current = 0;
-    int offset = 0;
-    int visible = screen_heigth_ - 4;
+	int offset = 0;
+	int visible = screen_heigth_ - 4;
 
 	while (true) {
-		{
-			std::unique_lock<std::mutex> lock(main_window_m_);
-			for (int i = 0; i + offset < main_window_menu_options_.size(); ++i) {
-				if (i == current) {
-					wattron(main_window_, A_REVERSE);
-				}
-				if (i < visible) {
-					mvwprintw(main_window_, i + 1, 1,
-						  main_window_menu_options_[i + offset].c_str());
-				}
-				wattroff(main_window_, A_REVERSE);
-			}
-			wrefresh(main_window_);
-		}
-
 		choice = wgetch(main_window_);
 
 		if (choice == KEY_UP || choice == 'k') {
@@ -93,7 +77,21 @@ void user_interface::mainWindowSelector() {
 			main_window_m_.lock();
 		}
 		if (choice == 'r') {
-			remove_bot_callback_(current);
+			remove_bot_callback_(bot_ip_addresses_[current]);
+		}
+
+		{
+			std::unique_lock<std::mutex> lock(main_window_m_);
+			for (int i = 0; i + offset < main_window_menu_options_.size(); ++i) {
+				if (i == current) {
+					wattron(main_window_, A_REVERSE);
+				}
+				if (i < visible) {
+					mvwprintw(main_window_, i + 1, 1, main_window_menu_options_[i + offset].c_str());
+				}
+				wattroff(main_window_, A_REVERSE);
+			}
+			wrefresh(main_window_);
 		}
 	}
 }
@@ -103,6 +101,7 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 	int parameters_num = stoi(params[0]);
 	std::vector<int> max_params_lenghts(parameters_num, 0);
 	std::vector<std::string> data_output;
+	std::vector<std::string> ip_addresses;
 
 	for (int i = 1; i < params.size(); ++i) {
 		for (int j = 0; j < parameters_num; ++j) {
@@ -111,8 +110,8 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 			if (max_params_lenghts[j] < current_item.size()) {
 				max_params_lenghts[j] = current_item.size();
 			}
-			if (j == 0) {
-				bot_ip_addresses_.push_back(current_item);
+			if (j == 0 && i > parameters_num) {
+				ip_addresses.push_back(current_item);
 			}
 		}
 		i += parameters_num - 1;
@@ -132,6 +131,7 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 		i += parameters_num - 1;
 	}
 	main_window_menu_options_ = std::move(data_output);
+	bot_ip_addresses_ = std::move(ip_addresses);
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);

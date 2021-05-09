@@ -41,8 +41,3 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads)
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARY})
-
-# TBB
-find_package(TBB REQUIRED COMPONENTS tbb)
-include_directories(${TBB_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} TBB::tbb)
