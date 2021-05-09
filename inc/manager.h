@@ -57,6 +57,7 @@ class manager {
 	// Interface
 	void getBotsData();
     void removeClient(std::string&);
+    void addVictim(std::string&);
 
 	user_interface interactive_;
 	std::future<void> ui_start_;

