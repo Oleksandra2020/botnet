@@ -1,10 +1,8 @@
 #include "user_interface.h"
 
-#include <ncurses.h>
-
 user_interface::user_interface() {
-	commands_info_ = {"[u] - update the view", "[j]/[k] - select bot", "[r] - remove selected bot",
-			  "[i] - input new victim ip"};
+	commands_info_ = {"[u] - update the view", "[j]/[k] - select bot", "[r] - remove selected item",
+			  "[i] - input new victim ip", "[v] - view active victims"};
 
 	initscr();
 	noecho();
@@ -48,13 +46,14 @@ void user_interface::reRenderCommandsHelp() {
 
 	int x_pos = 1;
 	int y_pos = 0;
+	int separator = 2;
 	for (auto& item : commands_info_) {
-		mvwprintw(secondary_window_, y_pos, x_pos, item.c_str());
-		x_pos += item.size() + 1;
-		if (x_pos > screen_width_) {
+		if (x_pos + item.size() + separator >= screen_width_) {
 			x_pos = 1;
-			y_pos++;
+			++y_pos;
 		}
+		mvwprintw(secondary_window_, y_pos, x_pos, item.c_str());
+		x_pos += item.size() + separator;
 	}
 	wrefresh(secondary_window_);
 }

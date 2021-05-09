@@ -41,7 +41,6 @@ class user_interface {
 	void reRenderInputWindow();
 
 	std::string getInput();
-	void fillWindow_(WINDOW*, std::vector<std::string>&);
 	int getOptimalSeparatorSize_(int, int);
 
 	std::vector<std::string> bot_ip_addresses_;
