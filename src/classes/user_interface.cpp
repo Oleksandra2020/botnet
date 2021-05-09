@@ -87,6 +87,7 @@ void user_interface::mainWindowSelector() {
 		}
 		if (choice == 'u') {
 			get_bots_data_callback_();
+            ui_update_m_.lock();
 			break;
 		}
 		if (choice == 'r') {
@@ -134,9 +135,10 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);
-	// fillWindow_(main_window_, bots_data_);
 
 	wrefresh(main_window_);
+
+    ui_update_m_.unlock();
 }
 
 void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths,
