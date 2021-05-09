@@ -24,8 +24,8 @@ class user_interface {
 	void updateMainWindowData(std::vector<std::string>&);
 	void updateMainWindowTitles(std::vector<std::string>&, std::vector<int>&, std::string&);
 
-	std::mutex ui_update_m_;
-	std::vector<std::string> bots_data_;
+	std::mutex main_window_m_;
+	std::vector<std::string> main_window_menu_options_;
 
 	std::function<void()> get_bots_data_callback_;
 	std::function<void(int)> remove_bot_callback_;
@@ -42,9 +42,9 @@ class user_interface {
 	WINDOW* main_window_;
 	WINDOW* help_commands_window_;
 
-    int main_selector_offset_ = 0;
+    // int main_window_selector_offset = 0;
 
-	int visible_; 
+	// int visible_; 
 
 	int screen_width_;
 	int screen_heigth_;

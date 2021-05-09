@@ -5,7 +5,7 @@ user_interface::user_interface() {
 	noecho();
 	cbreak();
 	getmaxyx(stdscr, screen_heigth_, screen_width_);
-	visible_ = screen_heigth_ - 4;
+	// visible = screen_heigth_ - 4;
 }
 
 user_interface::~user_interface() { endwin(); }
@@ -49,16 +49,19 @@ void user_interface::initWindows() {
 void user_interface::mainWindowSelector() {
 	int choice;
 	int current = 0;
+    int offset = 0;
+    int visible = screen_heigth_ - 4;
 
 	while (true) {
 		{
-			std::unique_lock<std::mutex> lock(ui_update_m_);
-			for (int i = 0; i + main_selector_offset_ < bots_data_.size(); ++i) {
+			std::unique_lock<std::mutex> lock(main_window_m_);
+			for (int i = 0; i + offset < main_window_menu_options_.size(); ++i) {
 				if (i == current) {
 					wattron(main_window_, A_REVERSE);
 				}
-				if (i < visible_) {
-					mvwprintw(main_window_, i + 1, 1, bots_data_[i + main_selector_offset_].c_str());
+				if (i < visible) {
+					mvwprintw(main_window_, i + 1, 1,
+						  main_window_menu_options_[i + offset].c_str());
 				}
 				wattroff(main_window_, A_REVERSE);
 			}
@@ -71,31 +74,28 @@ void user_interface::mainWindowSelector() {
 			--current;
 			if (current == -1) {
 				++current;
-				if (main_selector_offset_ > 0) {
-					--main_selector_offset_;
+				if (offset > 0) {
+					--offset;
 				}
 			};
 		}
 		if (choice == KEY_DOWN || choice == 'j') {
 			++current;
-			if (current >= visible_ || current >= bots_data_.size()) {
+			if (current >= visible || current >= main_window_menu_options_.size()) {
 				--current;
-				if (main_selector_offset_ + visible_ < bots_data_.size()) {
-					++main_selector_offset_;
+				if (offset + visible < main_window_menu_options_.size()) {
+					++offset;
 				}
 			}
 		}
 		if (choice == 'u') {
 			get_bots_data_callback_();
-            ui_update_m_.lock();
-			break;
+			main_window_m_.lock();
 		}
 		if (choice == 'r') {
 			remove_bot_callback_(current);
-			break;
 		}
 	}
-	mainWindowSelector();
 }
 
 void user_interface::updateMainWindowData(std::vector<std::string>& params) {
@@ -131,14 +131,14 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 		data_output.push_back(boost::algorithm::join(line, separator));
 		i += parameters_num - 1;
 	}
-	bots_data_ = std::move(data_output);
+	main_window_menu_options_ = std::move(data_output);
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);
 
 	wrefresh(main_window_);
 
-    ui_update_m_.unlock();
+	main_window_m_.unlock();
 }
 
 void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths,
@@ -152,14 +152,6 @@ void user_interface::updateMainWindowTitles(std::vector<std::string>& params, st
 	}
 	wrefresh(main_window_);
 	wmove(main_window_, screen_heigth_, screen_width_);
-}
-
-void user_interface::fillWindow_(WINDOW* wind, std::vector<std::string>& items) {
-	std::unique_lock<std::mutex> lock(ui_update_m_);
-	for (int i = 0; i < items.size(); ++i) {
-		mvwprintw(wind, i + 1, 1, (items[i]).c_str());
-	}
-	wrefresh(wind);
 }
 
 void user_interface::reRenderMainWindowBox() {
