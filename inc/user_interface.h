@@ -26,8 +26,12 @@ class user_interface {
 	std::vector<std::string> main_window_menu_options_;
 
 	std::function<void()> get_bots_data_callback_;
+	std::function<void()> get_victims_data_callback_;
 	std::function<void(std::string&)> remove_bot_callback_;
+	std::function<void(std::string&)> remove_victim_callback_;
 	std::function<void(std::string&)> add_victim_callback_;
+
+    std::string active_tab_;
 
     private:
 	void renderLoadingScreen();
@@ -43,14 +47,15 @@ class user_interface {
 	std::string getInput();
 	int getOptimalSeparatorSize_(int, int);
 
-	std::vector<std::string> bot_ip_addresses_;
-	std::vector<std::string> commands_info_;
+	std::vector<std::string> main_menu_options_idicators_;
 
 	WINDOW* main_window_;
 	WINDOW* secondary_window_;
 
 	int screen_width_;
 	int screen_heigth_;
+
+	std::vector<std::string> commands_info_;
 };
 
 #endif	// USER_INTERFACE_H

