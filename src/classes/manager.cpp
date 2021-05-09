@@ -63,7 +63,7 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 
 void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	interactive_.updateMainWindowData(params);
+	interactive_.updateMainWindowMenu(params);
 }
 
 
