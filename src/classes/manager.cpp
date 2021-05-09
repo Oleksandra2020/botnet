@@ -15,9 +15,7 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 	    {"[GET_BOTS_DATA]", boost::bind(&manager::handleGetBotsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
 	};
-	interactive_.menu_handlers_ = {
-	    {"u", boost::bind(&manager::getBotsData, this)},
-	};
+    interactive_.get_bots_data_callback_ = boost::bind(&manager::getBotsData, this);
 }
 
 void manager::start() {
@@ -62,40 +60,7 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 
 void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	std::string curr;
-	int parameters_num = stoi(params[0]);
-	std::vector<int> max_value_size(parameters_num, 0);
-
-	for (int i = 1; i < params.size(); ++i) {
-		for (int j = 0; j < parameters_num; ++j) {
-			curr = params[i + j];
-
-			if (max_value_size[j] < curr.size()) {
-				max_value_size[j] = curr.size();
-			}
-			if (j == 0) {
-				bot_ip_addresses_.push_back(curr);
-			}
-		}
-		i += parameters_num - 1;
-	}
-
-	std::vector<std::string> data_output;
-	std::string separator = std::string(5, ' ');
-
-	for (int i = 1 + parameters_num; i < params.size(); ++i) {
-		std::vector<std::string> line;
-
-		for (int j = 0; j < parameters_num; ++j) {
-			line.push_back(params[i + j] + std::string(max_value_size[j] - params[i + j].size(), ' '));
-		}
-		data_output.push_back(boost::algorithm::join(line, separator));
-		i += parameters_num - 1;
-	}
-	interactive_.bots_data_ = std::move(data_output);
-
-	interactive_.updateBots();
-	interactive_.updateTitles(params, max_value_size, separator);
+	interactive_.updateMainWindowData(params);
 }
 
 void manager::getBotsData() {

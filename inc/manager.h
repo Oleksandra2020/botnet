@@ -4,7 +4,6 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
@@ -54,7 +53,6 @@ class manager {
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 	std::string passphrase_;
-	std::vector<std::string> bot_ip_addresses_;
 
 	// Interface
 	void getBotsData();
