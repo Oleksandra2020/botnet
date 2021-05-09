@@ -5,6 +5,7 @@ user_interface::user_interface() {
 	noecho();
 	cbreak();
 	getmaxyx(stdscr, screen_heigth_, screen_width_);
+	visible_ = screen_heigth_ - 4;
 }
 
 user_interface::~user_interface() { endwin(); }
@@ -50,34 +51,48 @@ void user_interface::mainWindowSelector() {
 	int current = 0;
 
 	while (true) {
-		for (int i = 0; i < bots_data_.size(); ++i) {
-			if (i == current) {
-				wattron(main_window_, A_REVERSE);
+		{
+			std::unique_lock<std::mutex> lock(ui_update_m_);
+			for (int i = 0; i + main_selector_offset_ < bots_data_.size(); ++i) {
+				if (i == current) {
+					wattron(main_window_, A_REVERSE);
+				}
+				if (i < visible_) {
+					mvwprintw(main_window_, i + 1, 1, bots_data_[i + main_selector_offset_].c_str());
+				}
+				wattroff(main_window_, A_REVERSE);
 			}
-			mvwprintw(main_window_, i + 1, 1, bots_data_[i].c_str());
-			wattroff(main_window_, A_REVERSE);
+			wrefresh(main_window_);
 		}
+
 		choice = wgetch(main_window_);
+
 		if (choice == KEY_UP || choice == 'k') {
 			--current;
 			if (current == -1) {
 				++current;
+				if (main_selector_offset_ > 0) {
+					--main_selector_offset_;
+				}
 			};
 		}
 		if (choice == KEY_DOWN || choice == 'j') {
 			++current;
-			if (current >= bots_data_.size()) {
+			if (current >= visible_ || current >= bots_data_.size()) {
 				--current;
-			};
+				if (main_selector_offset_ + visible_ < bots_data_.size()) {
+					++main_selector_offset_;
+				}
+			}
 		}
 		if (choice == 'u') {
-            get_bots_data_callback_();
+			get_bots_data_callback_();
 			break;
 		}
-        if (choice == 'r'){
-            remove_bot_callback_(current);
-            break;
-        }
+		if (choice == 'r') {
+			remove_bot_callback_(current);
+			break;
+		}
 	}
 	mainWindowSelector();
 }
@@ -102,7 +117,8 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 		i += parameters_num - 1;
 	}
 
-    int optimal_separator_size = getOptimalSeparatorSize_(parameters_num, std::accumulate(max_params_lenghts.begin(),max_params_lenghts.end(),0));
+	int optimal_separator_size =
+	    getOptimalSeparatorSize_(parameters_num, std::accumulate(max_params_lenghts.begin(), max_params_lenghts.end(), 0));
 	std::string separator = std::string(optimal_separator_size, ' ');
 
 	for (int i = 1 + parameters_num; i < params.size(); ++i) {
@@ -114,15 +130,17 @@ void user_interface::updateMainWindowData(std::vector<std::string>& params) {
 		data_output.push_back(boost::algorithm::join(line, separator));
 		i += parameters_num - 1;
 	}
+	bots_data_ = std::move(data_output);
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);
-	fillWindow_(main_window_, data_output);
+	// fillWindow_(main_window_, bots_data_);
 
 	wrefresh(main_window_);
 }
 
-void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths, std::string& separator) {
+void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths,
+					    std::string& separator) {
 	int parameters_num = stoi(params[0]);
 	int x_offset = 1;
 
@@ -133,7 +151,6 @@ void user_interface::updateMainWindowTitles(std::vector<std::string>& params, st
 	wrefresh(main_window_);
 	wmove(main_window_, screen_heigth_, screen_width_);
 }
-
 
 void user_interface::fillWindow_(WINDOW* wind, std::vector<std::string>& items) {
 	std::unique_lock<std::mutex> lock(ui_update_m_);
@@ -148,7 +165,6 @@ void user_interface::reRenderMainWindowBox() {
 	box(main_window_, 0, 0);
 }
 
-int user_interface::getOptimalSeparatorSize_(int parameters_num, int line_size){
-    return (int) (screen_width_ - line_size) / parameters_num;
+int user_interface::getOptimalSeparatorSize_(int parameters_num, int line_size) {
+	return (int)(screen_width_ - line_size) / parameters_num;
 }
-

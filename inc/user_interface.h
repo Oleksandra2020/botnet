@@ -42,6 +42,10 @@ class user_interface {
 	WINDOW* main_window_;
 	WINDOW* help_commands_window_;
 
+    int main_selector_offset_ = 0;
+
+	int visible_; 
+
 	int screen_width_;
 	int screen_heigth_;
 
