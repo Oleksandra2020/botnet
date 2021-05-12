@@ -4,7 +4,9 @@ session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : so
 	id_ = id;
 	ip_ = "";
 	inactive_timeout_count_ = 1;
+	boost::asio::streambuf::mutable_buffers_type bufs = buffer_.prepare(BUFFER_SIZE_RESERVE);
 }
+
 session::~session() { stop(); }
 
 void session::start(on_msg_callback&& handler_func) {

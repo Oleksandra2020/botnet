@@ -1,6 +1,8 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#define BUFFER_SIZE_RESERVE 1048576  // 1mb
+
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/io_context.hpp>
