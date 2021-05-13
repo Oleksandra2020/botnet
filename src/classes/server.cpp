@@ -1,11 +1,5 @@
 #include "server.h"
 
-#ifdef NDEBUG
-#define PRINT(a, b)
-#else
-#define PRINT(a, b) std::cout << "[DEBUG]: " << (a) << (b) << std::endl;
-#endif
-
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
@@ -68,11 +62,11 @@ void server::handleResponse(std::string& query, session* client) {
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
 	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
 
-
-//	for (const auto& cl : clients_data_container_) {
-//		std::cout << "CLIENT: " << cl.first << " INFO:" << cl.second.status  << " VICTIMS:" << cl.second.victims << "\n";
-//	}
-
+	//	for (const auto& cl : clients_data_container_) {
+	//		std::cout << "CLIENT: " << cl.first << " INFO:" << cl.second.status  << " VICTIMS:" << cl.second.victims
+	//<<
+	//"\n";
+	//	}
 }
 
 void server::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
@@ -88,7 +82,6 @@ void server::handleInit(std::string& command, std::vector<std::string>& params, 
 			admin_hash_ = hasher(params[0]);
 			PRINT(command, " was successfull!");
 		}
-
 	}
 
 	if (clients_data_container_.find(client->ip_) != clients_data_container_.end()) {
@@ -190,18 +183,13 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 			// Update victim info
 			clients_data_container_.find(client_ip)->second.victims--;
 
-			victims_ips_.erase(
-			    std::remove(victims_ips_.begin(),
-					victims_ips_.end(),
-					victim),
-			    victims_ips_.end());
+			victims_ips_.erase(std::remove(victims_ips_.begin(), victims_ips_.end(), victim), victims_ips_.end());
 		}
 	}
 
 	clients_data_container_.find(client_ip)->second.victims_vector.erase(
 	    std::remove(clients_data_container_.find(client_ip)->second.victims_vector.begin(),
-			clients_data_container_.find(client_ip)->second.victims_vector.end(),
-			victim),
+			clients_data_container_.find(client_ip)->second.victims_vector.end(), victim),
 	    clients_data_container_.find(client_ip)->second.victims_vector.end());
 }
 
@@ -214,7 +202,6 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
 
 	if (validate_ip(victim_ip)) {
-
 		size_t client_id_for_min_victims = -1;
 		std::string client_ip = "";
 
@@ -237,9 +224,9 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 		victims_ips_.push_back(victim_ip);
 
 	} else {
-		std::cout << "WRONG VICTIM IP" << "\n";
+		std::cout << "WRONG VICTIM IP"
+			  << "\n";
 	}
-
 }
 
 void server::pingClients() {
@@ -309,7 +296,6 @@ void server::updateMsgCounter_(session* client) {
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
 
 bool server::validate_ip(std::string ip_string) {
-
 	try {
 		std::vector<std::string> victim_ip_port_split;
 		boost::split(victim_ip_port_split, ip_string, boost::is_any_of(":"), boost::token_compress_on);
@@ -320,8 +306,7 @@ bool server::validate_ip(std::string ip_string) {
 			return false;
 		}
 
-		for (std::string token: ip_tokens)
-		{
+		for (std::string token : ip_tokens) {
 			if (!isNumber_(token) || stoi(token) > 255 || stoi(token) < 0) {
 				return false;
 			}

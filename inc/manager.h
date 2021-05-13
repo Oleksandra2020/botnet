@@ -20,6 +20,7 @@
 #include "msg_parser.h"
 #include "session.h"
 #include "user_interface.h"
+#include "helper.h"
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;

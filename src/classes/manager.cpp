@@ -14,8 +14,8 @@ manager::manager(io::io_context& io_context, std::uint16_t port, std::string ser
 	     boost::bind(&manager::handleInit, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[GET_BOTS_DATA]", boost::bind(&manager::handleGetBotsData, this, boost::placeholders::_1, boost::placeholders::_2,
 					    boost::placeholders::_3)},
-	    {"[GET_VICTIMS_DATA]", boost::bind(&manager::handleGetVictimsData, this, boost::placeholders::_1, boost::placeholders::_2,
-					    boost::placeholders::_3)},
+	    {"[GET_VICTIMS_DATA]", boost::bind(&manager::handleGetVictimsData, this, boost::placeholders::_1,
+					       boost::placeholders::_2, boost::placeholders::_3)},
 	};
 	interactive_.get_bots_data_callback_ = boost::bind(&manager::getBotsData, this);
 	interactive_.get_victims_data_callback_ = boost::bind(&manager::getVictimsData, this);
@@ -69,13 +69,13 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
 	interactive_.updateMainWindowMenu(params);
-    interactive_.active_tab_ = command;
+	interactive_.active_tab_ = command;
 }
 
 void manager::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
 	interactive_.updateMainWindowMenu(params);
-    interactive_.active_tab_ = command;
+	interactive_.active_tab_ = command;
 }
 
 void manager::getBotsData() {
@@ -107,4 +107,3 @@ void manager::addVictim(std::string& victim_ip) {
 	std::string command = "[ADD_VICTIM]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
-

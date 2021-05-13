@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#define BUFFER_SIZE_RESERVE 8576 // bytes
+#define BUFFER_SIZE_RESERVE 8576  // bytes
 
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -16,6 +16,8 @@
 #include <memory>
 #include <queue>
 #include <sstream>
+
+#include "helper.h"
 
 namespace io = boost::asio;
 class session {

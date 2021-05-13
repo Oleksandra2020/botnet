@@ -4,11 +4,11 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <boost/algorithm/string/classification.hpp>  // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp>	      // Include for boost::split
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
-#include <boost/algorithm/string/split.hpp> // Include for boost::split
 #include <chrono>
 #include <cstdint>
 #include <future>
@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "helper.h"
 #include "msg_parser.h"
 #include "session.h"
 #include "victim_manipulation.h"
@@ -40,7 +41,6 @@ class client {
 	void handleInit(std::string &, std::vector<std::string> &, session *);
 	void handleAddClientVictim(std::string &, std::vector<std::string> &, session *);
 	void handleRemoveClientVictim(std::string &, std::vector<std::string> &, session *);
-
 
 	io::io_context &io_context_;
 	tcp::acceptor acceptor_;

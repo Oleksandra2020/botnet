@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "helper.h"
+
 class user_interface {
     public:
 	user_interface();
@@ -31,7 +33,7 @@ class user_interface {
 	std::function<void(std::string&)> remove_victim_callback_;
 	std::function<void(std::string&)> add_victim_callback_;
 
-    std::string active_tab_;
+	std::string active_tab_;
 
     private:
 	void renderLoadingScreen();
