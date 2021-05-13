@@ -164,7 +164,7 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 	std::string client_ip = "";
 
 	for (const auto& cl : clients_data_container_) {
-		if (cl.second.status == "bot_slave") {
+		if (cl.second.status == "bot_slave" && std::count(cl.second.victims_vector.begin(), cl.second.victims_vector.end(), victim)) {
 			client_id_for_min_victims = cl.second.id;
 			client_ip = cl.first;
 
