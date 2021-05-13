@@ -61,7 +61,7 @@ cmake --build build -DCMAKE_BUILD_TYPE=Release && cd build && make
 ```
 3. Run the client
 ```bash
-./build/botnet client <server-public-ip> <server-public-port> <local-port-to-run-on>
+sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-to-run-on>
 ```
 3. Run the manager
 ```bash
