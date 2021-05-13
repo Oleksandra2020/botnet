@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 		PRINT("Running as an admin", "...")
 
 		io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-		manager admin_tcp(io_context, atoi(argv[3]), argv[2], atoi(argv[3]));
+		manager admin_tcp(io_context, atoi(argv[4]), argv[2], atoi(argv[3]));
 		admin_tcp.start();
 		io_context.run();
 		return 0;
