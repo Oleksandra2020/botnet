@@ -16,9 +16,7 @@
 - Andrew Bek - [github](https://github.com/ReyBroncas) - bek@ucu.edu.ua
 - Olexandra Hutor - [github](https://github.com/Oleksandra2020) - hutor@ucu.edu.ua
 
-Project Link: [https://github.com/markvalyavka/cheaply_route_app](https://github.com/markvalyavka/cheaply_route_app)
-
-
+Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Oleksandra2020/botnet)
 
 
 <!-- TABLE OF CONTENTS -->
@@ -37,12 +35,6 @@ Project Link: [https://github.com/markvalyavka/cheaply_route_app](https://github
 
 This app will help you choose the most appropriate, route from location A to location B, chosen individually for each user.
 
-Why we?:
-* You pick any suitable way of transportation (car, taxi, bike, public transport, walking)
-* All prices are updated live
-* Straightforward and easy-to-use interface
-
-
 
 
 <!-- INSTALLATION -->
@@ -50,18 +42,40 @@ Why we?:
 
 1. Clone the repo
 ```sh
-git clone https://github.com/markvalyavka/cheaply_route_app.git
+git clone git@github.com:Oleksandra2020/botnet.git
 ```
+2. Build & compile
+
+```bash
+./scripts/build.sh
+```
+or 
+
+```bash
+cmake -Bbuild -DCMAKE_BUILD_TYPE=Release && cd build && make
+cmake --build build -DCMAKE_BUILD_TYPE=Release && cd build && make
+```
+3. Run the server
+```bash
+./build/botnet server <local-port-to-run-on>
+```
+3. Run the client
+```bash
+./build/botnet client <server-public-ip> <server-public-port> <local-port-to-run-on>
+```
+3. Run the manager
+```bash
+./build/botnet admin <server-public-ip> <server-public-port> <local-port-to-run-on>
+```
+
+
+
+
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-### Example of main page:
-![Приклад головної сторінки](https://github.com/markvalyavka/cheaply_route_app/blob/master/examples/main_page.png)
-### Example of the result page:
-![Приклад результату](https://github.com/markvalyavka/cheaply_route_app/blob/master/examples/result_page.png)
-![Приклад результату](https://github.com/markvalyavka/cheaply_route_app/blob/master/examples/result_page_2.png)
-
+### Example
 
 
 
