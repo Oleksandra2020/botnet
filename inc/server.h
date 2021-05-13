@@ -11,6 +11,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
+#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp> // Include for boost::split
 #include <chrono>
 #include <cstdint>
 #include <future>
@@ -66,6 +68,7 @@ class server {
 	bool checkHash_(std::string &);
 	const std::string getCurrentDateTime_();
 	void updateMsgCounter_(session *);
+	bool validate_ip(std::string);
 
 	// Communication
 	void handleResponse(std::string &, session *);
@@ -76,6 +79,7 @@ class server {
 	void handleRemoveClient(std::string &, std::vector<std::string> &params, session *client);
 	void handleRemoveVictim(std::string &, std::vector<std::string> &params, session *client);
 	void handleAddVictim(std::string &, std::vector<std::string> &params, session *client);
+
 
 	std::mutex clients_data_m_;
 	std::mutex clients_session_m_;

