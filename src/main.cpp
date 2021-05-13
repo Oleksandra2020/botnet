@@ -19,8 +19,8 @@
 #define ERROR(a) std::cerr << "[ERROR]: " << (a) << std::endl
 
 #define SERVER_LOCAL_PORT_NUMBER 2772
-#define SERVER_PUBLIC_PORT_NUMBER 3916
-#define SERVER_IP ""
+#define SERVER_PUBLIC_PORT_NUMBER 2772
+#define SERVER_IP "192.168.0.108"
 
 #define THREAD_NUM 12
 

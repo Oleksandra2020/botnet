@@ -39,6 +39,7 @@ class server {
 		int ping;
 		int inactive_counter;
 		std::string connected;
+		std::string status;
 	};
 
     public:
@@ -78,7 +79,7 @@ class server {
 
 	std::mutex clients_data_m_;
 	std::mutex clients_session_m_;
-	std::unordered_map<size_t, std::unique_ptr<session>> clients_sessions_container_;
+	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
 	std::unordered_map<std::string, bot_info> clients_data_container_;
 
 	msg_parser msg_parser_;

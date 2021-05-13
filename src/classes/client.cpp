@@ -42,7 +42,7 @@ void client::start() {
 
 void client::handleResponse(std::string& query, session* server) {
 	PRINT(server->endpoint_, (": " + query));
-
+	std::cout << query << "\n";
 	auto parsed_msg = msg_parser_.parse_msg(query);
 
 	if (parsed_msg["is_valid_msg"][0] == "false") {
