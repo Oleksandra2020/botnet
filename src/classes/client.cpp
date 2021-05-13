@@ -64,9 +64,7 @@ void client::handleAddClientVictim(std::string& command, std::vector<std::string
 	boost::split(victim_ip_port_split, victim_ip_to_add, boost::is_any_of(":"), boost::token_compress_on);
 
 	victims_->add_tcp_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
-	std::cout << "Adding this victim on client_side-> IP:  " << victim_ip_port_split[0]
-		  << " PORT: " << victim_ip_port_split[1] << "\n";
-	//	std::cout << "Adding this victim on client_side-> IP:  " << victim_ip_to_add << "\n";
+	PRINT("Adding this victim on client_side-> IP: " + victim_ip_port_split[0], " PORT: " + victim_ip_port_split[1]);
 }
 
 void client::handleRemoveClientVictim(std::string& command, std::vector<std::string>& params, session* client) {
@@ -75,7 +73,5 @@ void client::handleRemoveClientVictim(std::string& command, std::vector<std::str
 	boost::split(victim_ip_port_split, victim_ip_to_remove, boost::is_any_of(":"), boost::token_compress_on);
 
 	victims_->remove_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
-	std::cout << "Removing this victim on client_side-> IP:  " << victim_ip_port_split[0]
-		  << " PORT: " << victim_ip_port_split[1] << "\n";
-	//	std::cout << "Removing this victim on client_side-> IP:  " << victim_ip_to_remove << "\n";
+	PRINT("Removin this victim on client_side-> IP: " + victim_ip_port_split[0], " PORT: " + victim_ip_port_split[1]);
 }

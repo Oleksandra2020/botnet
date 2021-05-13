@@ -61,12 +61,6 @@ void server::handleResponse(std::string& query, session* client) {
 	updateMsgCounter_(client);
 	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
 	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], client);
-
-	//	for (const auto& cl : clients_data_container_) {
-	//		std::cout << "CLIENT: " << cl.first << " INFO:" << cl.second.status  << " VICTIMS:" << cl.second.victims
-	//<<
-	//"\n";
-	//	}
 }
 
 void server::handleAlive(std::string& command, std::vector<std::string>& params, session* client) {
@@ -124,7 +118,7 @@ void server::handleGetVictimsData(std::string& command, std::vector<std::string>
 	std::vector<std::string> output_params = {"1", "[Active_Victims]"};
 
 	for (auto& victim : victims_ips_) {
-		std::cout << victim << "\n";
+		PRINT("VICTIMS: ", victim);
 		output_params.push_back(victim);
 	}
 
@@ -224,8 +218,7 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 		victims_ips_.push_back(victim_ip);
 
 	} else {
-		std::cout << "WRONG VICTIM IP"
-			  << "\n";
+		PRINT("WRONG VICTIM IP: ", victim_ip);
 	}
 }
 
