@@ -110,7 +110,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	if (!params.size()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Latency]"};
+	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Status]"};
 	{
 		std::unique_lock<std::mutex> lock(clients_data_m_);
 		for (auto& bot : clients_data_container_) {
@@ -118,7 +118,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 			output_params.push_back(bot.second.connected);
 			output_params.push_back(std::to_string(bot.second.msgs_from));
 			output_params.push_back(std::to_string(bot.second.victims));
-			output_params.push_back(std::to_string(bot.second.ping));
+			output_params.push_back(bot.second.status);
 		}
 	}
 	client->send(msg_parser_.genCommand(command, output_params));
