@@ -1,6 +1,12 @@
 # Distributed Botnet
-[![made-with-python][made-with-python-shield]][made-with-python-url]
+[![ForTheBadge built-with-swag](http://ForTheBadge.com/images/badges/built-with-swag.svg)](https://GitHub.com/Naereen/)
+![made-with-python](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+![boost](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
 [![MIT License][license-shield]][license-url]
+![btc](https://img.shields.io/badge/Bitcoin-000000?style=for-the-badge&logo=bitcoin&logoColor=white)
+![porsche](https://aleen42.github.io/badges/src/porsche.svg)
+
+
 
 
 <!-- CONTACT -->
@@ -8,6 +14,7 @@
 
 - Markiyan Valyavka - [github](https://github.com/markvalyavka) - valyavka@ucu.edu.ua
 - Andrew Bek - [github](https://github.com/ReyBroncas) - bek@ucu.edu.ua
+- Olexandra Hutor - [github](https://github.com/Oleksandra2020) - hutor@ucu.edu.ua
 
 Project Link: [https://github.com/markvalyavka/cheaply_route_app](https://github.com/markvalyavka/cheaply_route_app)
 
