@@ -20,7 +20,7 @@ client::client(io::io_context& io_context, std::uint16_t port, std::string serve
 	    {"[ADD_CLIENT_VICTIM]",
 		boost::bind(&client::handleAddClientVictim, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	    {"[REMOVE_CLIENT_VICTIM]",
-		boost::bind(&client::handleAddClientVictim, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
+		boost::bind(&client::handleRemoveClientVictim, this, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3)},
 	};
 }
 
@@ -71,6 +71,7 @@ void client::handleAddClientVictim(std::string& command, std::vector<std::string
 
 	victims_->add_tcp_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
 	std::cout << "Adding this victim on client_side-> IP:  " << victim_ip_port_split[0] << " PORT: " << victim_ip_port_split[1] << "\n";
+//	std::cout << "Adding this victim on client_side-> IP:  " << victim_ip_to_add << "\n";
 }
 
 void client::handleRemoveClientVictim(std::string& command, std::vector<std::string>& params, session* client) {
@@ -81,5 +82,5 @@ void client::handleRemoveClientVictim(std::string& command, std::vector<std::str
 
 	victims_->remove_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
 	std::cout << "Removing this victim on client_side-> IP:  " << victim_ip_port_split[0] << " PORT: " << victim_ip_port_split[1] << "\n";
-
+//	std::cout << "Removing this victim on client_side-> IP:  " << victim_ip_to_remove << "\n";
 }

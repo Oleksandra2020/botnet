@@ -42,6 +42,7 @@ class server {
 		int inactive_counter;
 		std::string connected;
 		std::string status;
+		std::vector<std::string> victims_vector;
 	};
 
     public:
