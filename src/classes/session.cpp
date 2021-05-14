@@ -40,8 +40,11 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 		}
 
 		on_message_callback_(output, this);
-		read();
+		boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+		timer.async_wait(boost::bind(&session::read, this));
+
 	} else {
+		PRINT("READ ERROR OCCURED: ", error_code.message());
 		socket_.close(error_code);
 	}
 }
@@ -50,7 +53,8 @@ void session::send(std::string const& data) {
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
 	if (idle) {
-		write();
+		boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+		timer.async_wait(boost::bind(&session::write, this));
 	}
 }
 
@@ -67,14 +71,16 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 		msg_queue_.pop();
 
 		if (!msg_queue_.empty()) {
-			write();
+			boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+			timer.async_wait(boost::bind(&session::write, this));
 		}
 	} else {
+		PRINT("WRITE ERROR OCCURED: ", error_code.message());
 		stop();
 	}
 }
 
 void session::stop() {
-	// io_context_.post([this]() { socket_.close(error_code_); });
-	socket_.close(error_code_);
+	PRINT("Stopping the session instance: ", "...");
+	io_context_.post([this]() { socket_.close(error_code_); });
 }

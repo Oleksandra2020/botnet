@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include <string>
+
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
@@ -164,8 +166,8 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 	std::string client_ip = "";
 
 	for (const auto& cl : clients_data_container_) {
-
-		if (cl.second.status == "bot_slave" && std::find(cl.second.victims_vector.begin(), cl.second.victims_vector.end(), victim)!=cl.second.victims_vector.end()) {
+		if (cl.second.status == "bot_slave" && std::find(cl.second.victims_vector.begin(), cl.second.victims_vector.end(),
+								 victim) != cl.second.victims_vector.end()) {
 			client_id_for_min_victims = cl.second.id;
 			client_ip = cl.first;
 
@@ -296,7 +298,8 @@ bool server::validate_ip(std::string ip_string) {
 		std::vector<std::string> ip_tokens;
 		boost::split(ip_tokens, victim_ip_port_split[0], boost::is_any_of("."), boost::token_compress_on);
 
-		if (victim_ip_port_split[1].size() == 0 || stoi(victim_ip_port_split[1]) < 0 || stoi(victim_ip_port_split[1]) > 65536) {
+		if (victim_ip_port_split[1].size() == 0 || stoi(victim_ip_port_split[1]) < 0 ||
+		    stoi(victim_ip_port_split[1]) > 65536) {
 			return false;
 		}
 

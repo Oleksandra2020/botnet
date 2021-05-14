@@ -10,6 +10,7 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write_at.hpp>
+#include <boost/bind/bind.hpp>
 #include <future>
 #include <iostream>
 #include <istream>
