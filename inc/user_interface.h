@@ -59,6 +59,7 @@ class user_interface {
 	int screen_heigth_;
 
 	std::vector<std::string> commands_info_;
+    std::vector<int> max_params_lenghts_;
 };
 
 #endif	// USER_INTERFACE_H

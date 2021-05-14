@@ -153,13 +153,13 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	int columns_num = stoi(params[2]);
 
 	std::string current_item;
-	std::vector<int> max_params_lenghts(columns_num, 0);
 	std::vector<std::string> data_output;
 	std::vector<std::string> ip_addresses;
 
 	std::unique_lock<std::mutex> lock(main_menu_options_m_);
 
 	if (packet_id == 1) {
+	    max_params_lenghts_ = std::vector<int>(columns_num, 0);
 		main_window_menu_options_ = std::move(data_output);
 		main_menu_options_idicators_ = std::move(ip_addresses);
 	}
@@ -171,8 +171,8 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 
 			current_item = params[i + j];
 
-			if (max_params_lenghts[j] < current_item.size()) {
-				max_params_lenghts[j] = current_item.size();
+			if (max_params_lenghts_[j] < current_item.size()) {
+				max_params_lenghts_[j] = current_item.size();
 			}
 			if (j == 0 && i > columns_num) {
 				main_menu_options_idicators_.push_back(current_item);
@@ -182,14 +182,14 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	}
 
 	int optimal_separator_size =
-	    getOptimalSeparatorSize_(columns_num, std::accumulate(max_params_lenghts.begin(), max_params_lenghts.end(), 0));
+	    getOptimalSeparatorSize_(columns_num, std::accumulate(max_params_lenghts_.begin(), max_params_lenghts_.end(), 0));
 	std::string separator = std::string(optimal_separator_size, ' ');
 
 	for (int i = 3 + columns_num; i < params.size(); ++i) {
 		std::vector<std::string> line;
 
 		for (int j = 0; j < columns_num; ++j) {
-			line.push_back(params[i + j] + std::string(max_params_lenghts[j] - params[i + j].size(), ' '));
+			line.push_back(params[i + j] + std::string(max_params_lenghts_[j] - params[i + j].size(), ' '));
 		}
 		main_window_menu_options_.push_back(boost::algorithm::join(line, separator));
 		i += columns_num - 1;
@@ -197,7 +197,7 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 
 	if (packet_id == packets_num) {
 		reRenderMainWindowBox();
-		updateMainWindowTitles(params, max_params_lenghts, separator);
+		updateMainWindowTitles(params, max_params_lenghts_, separator);
 
 		wrefresh(main_window_);
 		main_window_m_.unlock();
