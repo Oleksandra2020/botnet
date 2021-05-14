@@ -148,21 +148,34 @@ std::string user_interface::getInput() {
 }
 
 void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
+	int packet_id = stoi(params[0]);
+	int packets_num = stoi(params[1]);
+	int columns_num = stoi(params[2]);
+
 	std::string current_item;
-	int columns_num = stoi(params[0]);
 	std::vector<int> max_params_lenghts(columns_num, 0);
 	std::vector<std::string> data_output;
 	std::vector<std::string> ip_addresses;
 
-	for (int i = 1; i < params.size(); ++i) {
+	std::unique_lock<std::mutex> lock(main_menu_options_m_);
+
+	if (packet_id == 1) {
+		main_window_menu_options_ = std::move(data_output);
+		main_menu_options_idicators_ = std::move(ip_addresses);
+	}
+
+	for (int i = 3; i < params.size(); ++i) {
 		for (int j = 0; j < columns_num; ++j) {
+			int a = i;
+			int b = j;
+
 			current_item = params[i + j];
 
 			if (max_params_lenghts[j] < current_item.size()) {
 				max_params_lenghts[j] = current_item.size();
 			}
 			if (j == 0 && i > columns_num) {
-				ip_addresses.push_back(current_item);
+				main_menu_options_idicators_.push_back(current_item);
 			}
 		}
 		i += columns_num - 1;
@@ -172,35 +185,33 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	    getOptimalSeparatorSize_(columns_num, std::accumulate(max_params_lenghts.begin(), max_params_lenghts.end(), 0));
 	std::string separator = std::string(optimal_separator_size, ' ');
 
-	for (int i = 1 + columns_num; i < params.size(); ++i) {
+	for (int i = 3 + columns_num; i < params.size(); ++i) {
 		std::vector<std::string> line;
 
 		for (int j = 0; j < columns_num; ++j) {
 			line.push_back(params[i + j] + std::string(max_params_lenghts[j] - params[i + j].size(), ' '));
 		}
-		data_output.push_back(boost::algorithm::join(line, separator));
+		main_window_menu_options_.push_back(boost::algorithm::join(line, separator));
 		i += columns_num - 1;
 	}
 
-	main_window_menu_options_ = std::move(data_output);
-	main_menu_options_idicators_ = std::move(ip_addresses);
+	if (packet_id == packets_num) {
+		reRenderMainWindowBox();
+		updateMainWindowTitles(params, max_params_lenghts, separator);
 
-	reRenderMainWindowBox();
-	updateMainWindowTitles(params, max_params_lenghts, separator);
-
-	wrefresh(main_window_);
-
-	main_window_m_.unlock();
+		wrefresh(main_window_);
+		main_window_m_.unlock();
+	}
 }
 
 void user_interface::updateMainWindowTitles(std::vector<std::string>& params, std::vector<int>& max_lengths,
 					    std::string& separator) {
-	int columns_num = stoi(params[0]);
+	int columns_num = stoi(params[2]);
 	int x_offset = 1;
 
-	for (int i = 1; i < 1 + columns_num; ++i) {
+	for (int i = 3; i < 3 + columns_num; ++i) {
 		mvwprintw(main_window_, 0, x_offset, params[i].c_str());
-		x_offset += max_lengths[i - 1] + separator.size();
+		x_offset += max_lengths[i - 3] + separator.size();
 	}
 	wrefresh(main_window_);
 	wmove(main_window_, screen_heigth_, screen_width_);

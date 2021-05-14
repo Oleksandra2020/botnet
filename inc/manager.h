@@ -17,10 +17,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "helper.h"
 #include "msg_parser.h"
 #include "session.h"
 #include "user_interface.h"
-#include "helper.h"
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
@@ -59,9 +59,9 @@ class manager {
 	// Interface get-requests
 	void getBotsData();
 	void getVictimsData();
-    void removeClient(std::string&);
-    void removeVictim(std::string&);
-    void addVictim(std::string&);
+	void removeClient(std::string &);
+	void removeVictim(std::string &);
+	void addVictim(std::string &);
 
 	user_interface interactive_;
 	std::future<void> ui_start_;

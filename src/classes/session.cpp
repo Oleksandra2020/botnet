@@ -23,15 +23,6 @@ void session::read() {
 void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
 	if (!error_code) {
-		std::string output;
-		std::stringstream output_stream;
-
-		output.resize(bytes_transferred);
-		output_stream << std::istream(&buffer_).rdbuf();
-		output_stream.read(&output[0], bytes_transferred);
-		output = output.substr(0, output.size() - 1);
-		buffer_.consume(bytes_transferred);
-
 		endpoint_ = socket_.remote_endpoint(error_code);
 		if (ip_ == "") {
 			std::ostringstream ip_stream;
@@ -39,7 +30,18 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 			ip_ = ip_stream.str();
 		}
 
-		on_message_callback_(output, this);
+		std::istream is(&buffer_);
+		std::string line;
+		while (is) {
+			std::getline(is, line);
+
+			if (is) {
+				on_message_callback_(line, this);
+			}
+		};
+
+		buffer_.consume(bytes_transferred);
+
 		boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
 		timer.async_wait(boost::bind(&session::read, this));
 

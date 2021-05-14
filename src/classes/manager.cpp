@@ -50,8 +50,10 @@ void manager::handleResponse(std::string& query, session* manager) {
 	if (parsed_msg["is_valid_msg"][0] == "false") {
 		return;
 	}
-	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
-	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], manager);
+	if (command_handlers_.find(parsed_msg["command"][0]) != command_handlers_.end()) {
+		auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
+		if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], manager);
+	}
 }
 
 void manager::handleAlive(std::string& command, std::vector<std::string>& params, session* server) {

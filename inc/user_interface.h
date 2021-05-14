@@ -34,6 +34,7 @@ class user_interface {
 	std::function<void(std::string&)> add_victim_callback_;
 
 	std::string active_tab_;
+    std::mutex main_menu_options_m_;
 
     private:
 	void renderLoadingScreen();
