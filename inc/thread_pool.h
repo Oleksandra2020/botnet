@@ -110,8 +110,9 @@ private:
                         int in = 0;
                         for (int j = 0; j < victims_to_remove.size(); j++)
                         {
-                            if (victims_to_remove[j].dest_port == ips_ports.dest_port
+                            if ((victims_to_remove[j].dest_port == ips_ports.dest_port
                                 && victims_to_remove[j].dest_ip == ips_ports.dest_ip)
+                                || victims_to_remove[j].host_name == ips_ports.host_name)
                             {
                                 in = 1;
                                 victims_to_remove.erase(victims_to_remove.cbegin()+j);

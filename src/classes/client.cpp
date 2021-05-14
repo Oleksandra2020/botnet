@@ -72,6 +72,6 @@ void client::handleRemoveClientVictim(std::string& command, std::vector<std::str
 	std::vector<std::string> victim_ip_port_split;
 	boost::split(victim_ip_port_split, victim_ip_to_remove, boost::is_any_of(":"), boost::token_compress_on);
 
-	victims_->remove_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
+	victims_->remove_tcp_victim(victim_ip_port_split[0].c_str(), victim_ip_port_split[1].c_str());
 	PRINT("Removin this victim on client_side-> IP: " + victim_ip_port_split[0], " PORT: " + victim_ip_port_split[1]);
 }

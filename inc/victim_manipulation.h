@@ -21,7 +21,9 @@ public:
 
     void add_http_victim(const char* host_name);
 
-    void remove_victim(const char* dest_ip, const char* dest_port);
+    void remove_tcp_victim(const char* dest_ip, const char* dest_port);
+
+    void remove_http_victim(const char* host_name);
 
     void clear_thread_pool(int threads);
 
