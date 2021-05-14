@@ -33,7 +33,7 @@ Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Olek
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This app will help you choose the most appropriate, route from location A to location B, chosen individually for each user.
+The botnet is a network of computers that has a server-computer with clients, who get the victims and commands from the server to perform an attack on the victim.
 
 
 
@@ -75,6 +75,10 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+
+1. Run as specified above
+2. Using the instructions for admin user add/remove clients and victims
+
 ### Example
 
 
