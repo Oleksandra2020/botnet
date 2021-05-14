@@ -52,7 +52,6 @@ git clone git@github.com:Oleksandra2020/botnet.git
 or 
 
 ```bash
-cmake -Bbuild -DCMAKE_BUILD_TYPE=Release && cd build && make
 cmake --build build -DCMAKE_BUILD_TYPE=Release && cd build && make
 ```
 3. Run the server
