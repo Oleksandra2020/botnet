@@ -65,7 +65,7 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 ```
 3. Run the manager
 ```bash
-./build/botnet admin <server-public-ip> <server-public-port> <local-port-to-run-on>
+./build/botnet admin <server-public-ip> <server-public-port> <local-port-to-run-on> <password>
 ```
 
 
