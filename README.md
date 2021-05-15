@@ -1,13 +1,6 @@
 # Distributed Botnet
-[![ForTheBadge built-with-swag](http://ForTheBadge.com/images/badges/built-with-swag.svg)](https://GitHub.com/Naereen/)
 ![made-with-python](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
-![boost](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
 [![MIT License][license-shield]][license-url]
-![btc](https://img.shields.io/badge/Bitcoin-000000?style=for-the-badge&logo=bitcoin&logoColor=white)
-![porsche](https://aleen42.github.io/badges/src/porsche.svg)
-
-
-
 
 <!-- CONTACT -->
 ## Contact
@@ -33,9 +26,18 @@ Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Olek
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-The botnet is a network of computers that has a server-computer with clients, who get the victims and commands from the server to perform an attack on the victim.
+This project is the distributed network of computers running this program. Clients or bots are connected to the single server and are getting the commands from the the bot-manager through the server. They could perform http & tcp flood attacks on specified IP addresses of victim.
 
+### Example
+Example of ~30 clients connected to the server (in local network) that are viewed & controlled by the bot-manager.
 
+![gif_example][example]
+
+<!-- DEPENDENCIES -->
+### Dependencies
+* Boost
+  - system
+* Ncurses
 
 <!-- INSTALLATION -->
 ## Installation
@@ -52,7 +54,6 @@ git clone git@github.com:Oleksandra2020/botnet.git
 or 
 
 ```bash
-cmake -Bbuild -DCMAKE_BUILD_TYPE=Release && cd build && make
 cmake --build build -DCMAKE_BUILD_TYPE=Release && cd build && make
 ```
 3. Run the server
@@ -69,18 +70,11 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 ```
 
 
-
-
-
-
 <!-- USAGE EXAMPLES -->
 ## Usage
 
 1. Run as specified above
-2. Using the instructions for admin user add/remove clients and victims
-
-### Example
-
+2. To use the bot manager use its keybinding shown below the main window
 
 
 <!-- CONTRIBUTING -->
@@ -110,6 +104,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[example]: https://github.com/Oleksandra2020/botnet/blob/master/res/example.gif
+
 [made-with-python-shield]: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
 [made-with-python-url]: https://www.python.org/
 [contributors-shield]: https://img.shields.io/github/contributors/Naereen/StrapDown.js.svg
