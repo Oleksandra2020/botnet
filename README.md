@@ -26,10 +26,18 @@ Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Olek
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-The botnet is a network of computers that has a server-computer with clients, who get the victims and commands from the server to perform an attack on the victim.
+This project is the distributed network of computers running this program. Clients or bots are connected to the single server and are getting the commands from the the bot-manager through the server. They could perform http & tcp flood attacks on specified IP addresses of victim.
 
 ### Example
-![alt text][example]
+Example of ~30 clients connected to the server (in local network) that are viewed & controlled by the bot-manager.
+
+![gif_example][example]
+
+<!-- DEPENDENCIES -->
+### Dependencies
+* Boost
+  - system
+* Ncurses
 
 <!-- INSTALLATION -->
 ## Installation
@@ -60,6 +68,7 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 ```bash
 ./build/botnet admin <server-public-ip> <server-public-port> <local-port-to-run-on>
 ```
+
 
 <!-- USAGE EXAMPLES -->
 ## Usage
