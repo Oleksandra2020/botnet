@@ -79,7 +79,7 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 2. Using the instructions for admin user add/remove clients and victims
 
 ### Example
-
+![alt text][example]
 
 
 <!-- CONTRIBUTING -->
@@ -109,6 +109,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[example]: https://github.com/Oleksandra2020/botnet/blob/master/res/example.gif
+
 [made-with-python-shield]: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
 [made-with-python-url]: https://www.python.org/
 [contributors-shield]: https://img.shields.io/github/contributors/Naereen/StrapDown.js.svg
