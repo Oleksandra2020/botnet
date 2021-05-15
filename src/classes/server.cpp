@@ -400,39 +400,4 @@ int server::is_valid_ip(std::string victim_ip)
 		return 0;
 	return 1;
 }
-""
 
-bool server::validate_ip(std::string ip_string) {
-	try {
-
-
-		std::vector<std::string> victim_ip_port_split;
-		boost::split(victim_ip_port_split, ip_string, boost::is_any_of(":"), boost::token_compress_on);
-		std::vector<std::string> ip_tokens;
-		std::cout << victim_ip_port_split[0] << " " << victim_ip_port_split[1] << "\n";
-
-
-		boost::split(ip_tokens, victim_ip_port_split[0], boost::is_any_of("."), boost::token_compress_on);
-
-		if (victim_ip_port_split[1].size() == 0 || stoi(victim_ip_port_split[1]) < 0 || stoi(victim_ip_port_split[1]) > 65536) {
-			return false;
-		}
-
-		if (ip_tokens.size() != 4) {
-			return false;
-		}
-
-		for (std::string token : ip_tokens) {
-			if (token.size() > 3) {
-				return false;
-			}
-			if (!isNumber_(token) || stoi(token) > 255 || stoi(token) < 0) {
-				return false;
-			}
-		}
-	} catch (err) {
-		return false;
-	}
-
-	return true;
-}
