@@ -35,7 +35,8 @@ Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Olek
 
 The botnet is a network of computers that has a server-computer with clients, who get the victims and commands from the server to perform an attack on the victim.
 
-
+### Example
+![alt text][example]
 
 <!-- INSTALLATION -->
 ## Installation
@@ -67,19 +68,11 @@ sudo ./build/botnet client <server-public-ip> <server-public-port> <local-port-t
 ./build/botnet admin <server-public-ip> <server-public-port> <local-port-to-run-on>
 ```
 
-
-
-
-
-
 <!-- USAGE EXAMPLES -->
 ## Usage
 
 1. Run as specified above
-2. Using the instructions for admin user add/remove clients and victims
-
-### Example
-![alt text][example]
+2. To use the bot manager use its keybinding shown below the main window
 
 
 <!-- CONTRIBUTING -->
