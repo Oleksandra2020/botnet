@@ -400,7 +400,7 @@ int server::is_valid_ip(std::string victim_ip)
 		return 0;
 	return 1;
 }
-
+""
 
 bool server::validate_ip(std::string ip_string) {
 	try {
