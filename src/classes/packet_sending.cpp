@@ -93,7 +93,6 @@ int packet_sending::send_tcp(int iph_sourceip, int tcph_srcport, int iph_destip,
 	} else {
 		std::cout << dest_ip << " - sendto() tcp is OK " << std::endl;
 	}
-	sleep(1);
 	close(sd);
 	return 0;
 }
