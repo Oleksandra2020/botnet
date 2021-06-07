@@ -76,13 +76,13 @@ class packet_sending {
     public:
 	packet_sending() = default;
 
-	int send_tcp(const char* iph_sourceip, const char* tcph_srcport, const char* iph_destip, const char* tcph_destport);
+	static int send_tcp(int iph_sourceip, int tcph_srcport, int iph_destip, int tcph_destport);
 
-	void send_get_request(const char* host_name);
+	static void send_get_request(const char* host_name);
 
     private:
 	// Simple checksum function, may use others such as Cyclic Redundancy Check, CRC
-	unsigned short csum(unsigned short* buf, int len);
+	static unsigned short csum(unsigned short* buf, int len);
 };
 
 #endif	// EXAMPLE_SYN_TCP_SEND_H

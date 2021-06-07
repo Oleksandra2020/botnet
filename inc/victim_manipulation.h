@@ -3,18 +3,19 @@
 
 #include "thread_pool.h"
 #include "thread"
+#include <algorithm>
+
 
 class victims
 {
 public:
-    thread_pool pool;
-    const char* source_ip;
-    const char* source_port;
+    int source_ip;
+    int source_port;
 
     victims(int threads, const char* iph_sourceip, const char* tcph_srcport) : pool(threads)
     {
-        source_ip = iph_sourceip;
-        source_port = tcph_srcport;
+	source_ip = inet_addr(iph_sourceip);
+	source_port = stoi(std::string(tcph_srcport));
     }
 
     void add_tcp_victim(const char* iph_destip, const char* tcph_destport);
@@ -27,9 +28,9 @@ public:
 
     void clear_thread_pool(int threads);
 
-    void clear_thread(int thread);
 
 private:
+	thread_pool pool;
 
 };
 

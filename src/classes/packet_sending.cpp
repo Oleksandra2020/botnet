@@ -2,8 +2,22 @@
 // Run as root or SUID 0, just datagram no data/payload
 #include "packet_sending.h"
 
-int packet_sending::send_tcp(const char *iph_sourceip, const char *tcph_srcport, const char *iph_destip,
-			     const char *tcph_destport) {
+void convert_int_to_ip(int ip_to_convert, std::string& new_ip)
+{
+	int num_of_bytes = 4;
+	for (int i = 0; i < num_of_bytes; i++)
+	{
+		new_ip += std::to_string((ip_to_convert >> i*8) & 0xFF);
+		if (i != num_of_bytes - 1) new_ip += ".";
+	}
+}
+
+int packet_sending::send_tcp(int iph_sourceip, int tcph_srcport, int iph_destip, int tcph_destport) {
+	std::string source_ip;
+	std::string dest_ip;
+	convert_int_to_ip(iph_sourceip, source_ip);
+	convert_int_to_ip(iph_destip, dest_ip);
+
 	int sd;
 	// No data, just datagram
 	char buffer[PCKT_LEN];
@@ -28,11 +42,11 @@ int packet_sending::send_tcp(const char *iph_sourceip, const char *tcph_srcport,
 	sin.sin_family = AF_INET;
 	din.sin_family = AF_INET;
 	// Source port, can be any, modify as needed
-	sin.sin_port = htons(atoi(tcph_srcport));
-	din.sin_port = htons(atoi(tcph_destport));
+	sin.sin_port = htons(tcph_srcport);
+	din.sin_port = htons(tcph_destport);
 	// Source IP, can be any, modify as needed
-	sin.sin_addr.s_addr = inet_addr(iph_sourceip);
-	din.sin_addr.s_addr = inet_addr(iph_destip);
+	sin.sin_addr.s_addr = inet_addr(source_ip.c_str());
+	din.sin_addr.s_addr = inet_addr(dest_ip.c_str());
 	// IP structure
 	ip->iph_ihl = HEADER_LEN;
 	ip->iph_ver = VERSION;
@@ -45,14 +59,14 @@ int packet_sending::send_tcp(const char *iph_sourceip, const char *tcph_srcport,
 	ip->iph_chksum = 0;		 // Done by kernel
 
 	// Source IP, modify as needed, spoofed, we accept through command line argument
-	ip->iph_sourceip = inet_addr(iph_sourceip);
+	ip->iph_sourceip = inet_addr(source_ip.c_str());
 	// Destination IP, modify as needed, but here we accept through command line argument
-	ip->iph_destip = inet_addr(iph_destip);
+	ip->iph_destip = inet_addr(dest_ip.c_str());
 
 	// The TCP structure. The source port, spoofed, we accept through the command line
-	tcp->tcph_srcport = htons(atoi(tcph_srcport));
+	tcp->tcph_srcport = htons(tcph_srcport);
 	// The destination port, we accept through command line
-	tcp->tcph_destport = htons(atoi(tcph_destport));
+	tcp->tcph_destport = htons(tcph_destport);
 	tcp->tcph_seqnum = htonl(1);
 	tcp->tcph_acknum = 0;
 	tcp->tcph_offset = TCP_OFFSET;
@@ -77,9 +91,8 @@ int packet_sending::send_tcp(const char *iph_sourceip, const char *tcph_srcport,
 		strerror_r(errno, buffer, 256);
 		std::cout << buffer << std::endl;
 	} else {
-		std::cout << iph_destip << " - sendto() tcp is OK " << std::endl;
+		std::cout << dest_ip << " - sendto() tcp is OK " << std::endl;
 	}
-	sleep(1);
 	close(sd);
 	return 0;
 }
