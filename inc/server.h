@@ -8,11 +8,11 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <boost/algorithm/string/classification.hpp>  // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp>	      // Include for boost::split
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
-#include <boost/algorithm/string/split.hpp> // Include for boost::split
 #include <chrono>
 #include <cstdint>
 #include <future>
@@ -20,15 +20,16 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "helper.h"
 #include "msg_parser.h"
 #include "session.h"
-#include "helper.h"
 
 namespace io = boost::asio;
 using tcp = io::ip::tcp;
@@ -82,7 +83,6 @@ class server {
 	void handleRemoveVictim(std::string &, std::vector<std::string> &params, session *client);
 	void handleAddVictim(std::string &, std::vector<std::string> &params, session *client);
 
-
 	std::mutex clients_data_m_;
 	std::mutex clients_session_m_;
 	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
@@ -96,6 +96,7 @@ class server {
 	size_t admin_hash_ = 0;
 	std::vector<std::string> victims_ips_;
 	std::mutex victims_m_;
+	std::queue<std::vector<std::string>> bots_data_output_;
 };
 
 #endif	// SERVER_H

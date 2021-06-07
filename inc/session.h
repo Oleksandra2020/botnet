@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#define BUFFER_SIZE_RESERVE 8576  // bytes
+#define BUFFER_SIZE_RESERVE 18576  // bytes
 
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -37,8 +37,8 @@ class session {
 
 	void read();
 	size_t id_;
-	bool idle_;
-	int threads_;
+	bool idle_{};
+	int threads_{};
 	int inactive_timeout_count_;
 	tcp::endpoint endpoint_;
 	std::string ip_;

@@ -24,7 +24,7 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
 	if (!error_code) {
 		endpoint_ = socket_.remote_endpoint(error_code);
-		if (ip_ == "") {
+		if (ip_.empty()) {
 			std::ostringstream ip_stream;
 			ip_stream << endpoint_;
 			ip_ = ip_stream.str();
@@ -33,7 +33,8 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 		std::istream is(&buffer_);
 		std::string line;
 		while (is) {
-			std::getline(is, line);
+			std::getline(is, line, '\n');
+			// PRINT("LINE RAW: ", line);
 
 			if (is) {
 				on_message_callback_(line, this);

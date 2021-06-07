@@ -55,6 +55,7 @@ class manager {
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 	std::string passphrase_;
+	std::vector<std::string> bots_data_container_;
 
 	// Interface get-requests
 	void getBotsData();

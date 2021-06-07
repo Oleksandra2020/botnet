@@ -99,14 +99,20 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	if (params.empty()) return;
 	if (!checkHash_(params[0])) return;
 
+	if (params.size() == 2) {
+		if (stoi(params[1]) && bots_data_output_.size() > 0) {
+			client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
+			bots_data_output_.pop();
+			return;
+		}
+	}
 	int bot_counter = 0;
-	int max_bot_num_per_msg = 2;
+	int max_bot_num_per_msg = 20;
 	int current_msg = 0;
 
 	std::vector<std::string> msg;
 	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
-	std::vector<std::vector<std::string>> output_data;
-
+	std::queue<std::vector<std::string>> output_data;
 	{
 		std::unique_lock<std::mutex> lock(clients_data_m_);
 
@@ -115,7 +121,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 		for (auto& bot : clients_data_container_) {
 			if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
 				if (bot_counter) {
-					output_data.emplace_back(std::move(msg));
+					output_data.emplace(std::move(msg));
 					msg.clear();
 				}
 				bot_counter = 0;
@@ -137,13 +143,12 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 
 			++bot_counter;
 		}
-		output_data.emplace_back(std::move(msg));
+		output_data.emplace(std::move(msg));
 	}
+	bots_data_output_ = std::move(output_data);
 
-	for (auto& item : output_data) {
-		std::cout << msg_parser_.genCommand(command, item) << std::endl;
-		client->send(msg_parser_.genCommand(command, item));
-	}
+	client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
+	bots_data_output_.pop();
 }
 
 void server::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* client) {
