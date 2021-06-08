@@ -270,11 +270,8 @@ void server::pingClients() {
 		++client.second->inactive_timeout_count_;
 
 		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
-			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-			PRINT("NUMBER OF CLIENTS: ", clients_sessions_container_.size());
 
 			if (!client.second->disconnected_) {
-				PRINT("IT WAS CONNECTED: ", "!");
 				client.second->stop();
 			}
 

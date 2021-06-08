@@ -89,7 +89,7 @@ void session::stop() {
 	if (disconnected_) {
 		return;
 	}
-	PRINT("DISCONNECTING [" + ip_ + "] due to:", error_code_.message());
+	// PRINT("DISCONNECTING [" + ip_ + "] due to:", error_code_.message());
 	disconnected_ = true;
 	socket_.close(error_code_);
 }
