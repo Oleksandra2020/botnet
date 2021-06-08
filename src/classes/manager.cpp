@@ -123,8 +123,8 @@ void manager::removeClient(std::string& bot_ip) {
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
 
-void manager::removeVictim(std::string& bot_ip) {
-	std::vector<std::string> output_params = {passphrase_, bot_ip};
+void manager::removeVictim(std::string& victim_ip) {
+	std::vector<std::string> output_params = {passphrase_, victim_ip};
 	std::string command = "[DEL_VICTIM]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }

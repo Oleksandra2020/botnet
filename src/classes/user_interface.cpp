@@ -104,9 +104,10 @@ void user_interface::mainWindowMenu() {
 				break;
 			case 'r':
 				if (active_tab_ == "[GET_BOTS_DATA]") {	 //? Definitely need to make better solution in the future
-					remove_bot_callback_(main_menu_options_idicators_[current]);
+
+					remove_bot_callback_(main_menu_options_idicators_[current + offset]);
 				} else {
-					remove_victim_callback_(main_menu_options_idicators_[current]);
+					remove_victim_callback_(main_menu_options_idicators_[current + offset]);
 				}
 				break;
 			case 'i':

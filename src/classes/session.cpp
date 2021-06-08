@@ -48,7 +48,7 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 		timer.async_wait(boost::bind(&session::read, this));
 
 	} else {
-		PRINT("READ ERROR OCCURED: ", error_code.message());
+		// PRINT("READ ERROR OCCURED: ", error_code.message());
         stop();
 	}
 }
@@ -79,13 +79,13 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 			timer.async_wait(boost::bind(&session::write, this));
 		}
 	} else {
-		PRINT("WRITE ERROR OCCURED: ", error_code.message());
+		// PRINT("WRITE ERROR OCCURED: ", error_code.message());
 		stop();
 	}
 }
 
 void session::stop() {
-	PRINT("Stopping the session instance: ", "...");
+	// PRINT("Stopping the session instance: ", "...");
     disconnected_ = true;
 	io_context_.post([this]() { socket_.close(error_code_); });
 }
