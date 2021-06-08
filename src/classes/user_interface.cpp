@@ -185,9 +185,7 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);
-
 	wrefresh(main_window_);
-
 	main_window_m_.unlock();
 }
 

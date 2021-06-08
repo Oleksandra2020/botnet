@@ -95,7 +95,13 @@ void manager::handleGetBotsData(std::string& command, std::vector<std::string>& 
 }
 void manager::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	interactive_.updateMainWindowMenu(params);
+
+    std::vector<std::string> victims_data;
+    for (int i = 2; i < params.size(); ++i){
+        victims_data.push_back(params[i]);
+    }
+
+	interactive_.updateMainWindowMenu(victims_data);
 	interactive_.active_tab_ = command;
 }
 
