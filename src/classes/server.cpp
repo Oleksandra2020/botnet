@@ -107,30 +107,32 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 		}
 	}
 	int bot_counter = 0;
-	int max_bot_num_per_msg = 20;
-	int current_msg = 0;
+	int current_msg_block = 0;
+
+    // Clearing messages queue (for manager)
+	std::queue<std::vector<std::string>> empty;
+	std::swap(bots_data_output_, empty);
 
 	std::vector<std::string> msg;
 	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
-	std::queue<std::vector<std::string>> output_data;
 
-	int msgs_to_transfer = std::ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
+	int msg_blocks_num = std::ceil((float)clients_data_container_.size() / MAX_NUMBER_OF_BOTS_DATA_PER_MSG);
 
 	for (auto& bot : clients_data_container_) {
-		if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
+		if (bot_counter >= MAX_NUMBER_OF_BOTS_DATA_PER_MSG || !bot_counter) {
 			if (bot_counter) {
-				output_data.emplace(std::move(msg));
+				bots_data_output_.emplace(std::move(msg));
 				msg.clear();
 			}
 			bot_counter = 0;
 
-			msg.push_back(std::to_string(current_msg + 1));
-			msg.push_back(std::to_string(msgs_to_transfer));
+			msg.push_back(std::to_string(current_msg_block + 1));
+			msg.push_back(std::to_string(msg_blocks_num));
 			msg.push_back(std::to_string(parameters.size()));
 
 			msg.insert(msg.end(), parameters.begin(), parameters.end());
 
-			++current_msg;
+			++current_msg_block;
 		}
 
 		msg.push_back(bot.first);
@@ -141,8 +143,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 
 		++bot_counter;
 	}
-	output_data.emplace(std::move(msg));
-	bots_data_output_ = std::move(output_data);
+	bots_data_output_.emplace(std::move(msg));
 
 	client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
 	bots_data_output_.pop();
@@ -265,7 +266,9 @@ void server::pingClients() {
 
 		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
 			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-			client.second->stop();
+			if (!client.second->disconnected_) {
+				client.second->stop();
+			}
 
 			clients_sessions_container_.erase(client.second->id_);
 			if (clients_data_container_.find(client.second->ip_) != clients_data_container_.end()) {

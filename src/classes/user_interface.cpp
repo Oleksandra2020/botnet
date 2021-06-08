@@ -151,8 +151,9 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 	std::string current_item;
 	int columns_num = stoi(params[0]);
 	std::vector<int> max_params_lenghts(columns_num, 0);
-	std::vector<std::string> data_output;
-	std::vector<std::string> ip_addresses;
+
+	main_window_menu_options_.clear();
+	main_menu_options_idicators_.clear();
 
 	for (int i = 1; i < params.size(); ++i) {
 		for (int j = 0; j < columns_num; ++j) {
@@ -162,7 +163,7 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 				max_params_lenghts[j] = current_item.size();
 			}
 			if (j == 0 && i > columns_num) {
-				ip_addresses.push_back(current_item);
+				main_menu_options_idicators_.push_back(current_item);
 			}
 		}
 		i += columns_num - 1;
@@ -178,12 +179,9 @@ void user_interface::updateMainWindowMenu(std::vector<std::string>& params) {
 		for (int j = 0; j < columns_num; ++j) {
 			line.push_back(params[i + j] + std::string(max_params_lenghts[j] - params[i + j].size(), ' '));
 		}
-		data_output.push_back(boost::algorithm::join(line, separator));
+		main_window_menu_options_.push_back(boost::algorithm::join(line, separator));
 		i += columns_num - 1;
 	}
-
-	main_window_menu_options_ = std::move(data_output);
-	main_menu_options_idicators_ = std::move(ip_addresses);
 
 	reRenderMainWindowBox();
 	updateMainWindowTitles(params, max_params_lenghts, separator);

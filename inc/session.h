@@ -40,6 +40,7 @@ class session {
 	int inactive_timeout_count_;
 	tcp::endpoint endpoint_;
 	std::string ip_;
+    bool disconnected_;
 
     private:
 	void write();

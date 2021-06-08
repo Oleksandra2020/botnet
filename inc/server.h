@@ -4,6 +4,7 @@
 #define INACTIVITY_TIMEOUT 1  // 1 second
 #define INACTIVE_COUNTER_MAX 10
 #define NONE_PARAMETERS ""
+#define MAX_NUMBER_OF_BOTS_DATA_PER_MSG 20
 
 #include <unistd.h>
 
