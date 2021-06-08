@@ -1,9 +1,11 @@
 #include "session.h"
 
+#include <string>
+
 session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
 	ip_ = "";
-    disconnected_ = false;
+	disconnected_ = false;
 	inactive_timeout_count_ = 1;
 	boost::asio::streambuf::mutable_buffers_type bufs = buffer_.prepare(BUFFER_SIZE_RESERVE);
 }
@@ -49,7 +51,7 @@ void session::onRead(err error_code, std::size_t bytes_transferred) {
 
 	} else {
 		// PRINT("READ ERROR OCCURED: ", error_code.message());
-        stop();
+		stop();
 	}
 }
 
@@ -79,13 +81,15 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 			timer.async_wait(boost::bind(&session::write, this));
 		}
 	} else {
-		// PRINT("WRITE ERROR OCCURED: ", error_code.message());
 		stop();
 	}
 }
 
 void session::stop() {
-	// PRINT("Stopping the session instance: ", "...");
-    disconnected_ = true;
-	io_context_.post([this]() { socket_.close(error_code_); });
+	if (disconnected_) {
+		return;
+	}
+	PRINT("DISCONNECTING [" + ip_ + "] due to:", error_code_.message());
+	disconnected_ = true;
+	socket_.close(error_code_);
 }

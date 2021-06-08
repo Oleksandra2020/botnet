@@ -27,14 +27,18 @@ void client::start() {
 
 	socket_->connect(endpoint, error);
 
-	auto server = server_session_container_.emplace_back(std::make_shared<session>(std::move(*socket_), io_context_, 1));
+	if (error) {
+		PRINT("[ERROR]", " Cannot connect to the server");
+		return;
+	}
 
-	server->start(boost::bind(&client::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
+	auto server_session =
+	    server_session_container_.emplace_back(std::make_shared<session>(std::move(*socket_), io_context_, 1));
 
 	std::vector<std::string> output_params;
 	std::string command = "[INIT]";
-	server->send(msg_parser_.genCommand(command, output_params));
-	server->read();
+	server_session->send(msg_parser_.genCommand(command, output_params));
+	server_session->start(boost::bind(&client::handleResponse, this, boost::placeholders::_1, boost::placeholders::_2));
 }
 
 void client::handleResponse(std::string& query, session* server) {
