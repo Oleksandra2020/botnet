@@ -36,9 +36,7 @@ class session {
 	void send(std::string const&);
 
 	void read();
-	size_t id_;
-	bool idle_{};
-	int threads_{};
+	int id_;
 	int inactive_timeout_count_;
 	tcp::endpoint endpoint_;
 	std::string ip_;
