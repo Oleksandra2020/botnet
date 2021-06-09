@@ -73,7 +73,8 @@ class server {
 	bool checkHash_(std::string &);
 	const std::string getCurrentDateTime_();
 	void updateMsgCounter_(session *);
-	bool validate_ip(std::string);
+	int is_valid_ip(std::string);
+	bool valid_part(char *s);
 
 	// Communication
 	void handleResponse(std::string &, session *);
