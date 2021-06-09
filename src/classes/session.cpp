@@ -2,12 +2,11 @@
 
 #include <string>
 
-session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
+session::session(tcp::socket&& sock, io::io_service& io_context, int id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
 	ip_ = "";
 	disconnected_ = false;
 	inactive_timeout_count_ = 1;
-	boost::asio::streambuf::mutable_buffers_type bufs = buffer_.prepare(BUFFER_SIZE_RESERVE);
 }
 
 session::~session() { stop(); }

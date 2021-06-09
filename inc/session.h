@@ -28,7 +28,7 @@ class session {
 	using on_err_callback = std::function<void()>;
 
     public:
-	session(tcp::socket&&, io::io_context&, size_t);
+	session(tcp::socket&&, io::io_context&, int);
 	~session();
 
 	void start(on_msg_callback&& onMsg);
