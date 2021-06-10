@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define INACTIVITY_TIMEOUT 5  // 5 seconds
+#define INACTIVITY_TIMEOUT 20  // 5 seconds
 #define INACTIVE_COUNTER_MAX 8
 #define NONE_PARAMETERS ""
 #define MAX_NUMBER_OF_BOTS_DATA_PER_MSG 20
