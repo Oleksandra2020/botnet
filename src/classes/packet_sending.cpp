@@ -85,7 +85,7 @@ int packet_sending::send_tcp(int iph_sourceip, int tcph_srcport, int iph_destip,
 		exit(-1);
 	}
 
-	int return_value = sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&sin, sizeof(sin));
+	int return_value = sendto(sd, buffer, ip->iph_len, 0, (struct sockaddr *)&din, sizeof(din));
 	if (return_value < 0) {
 		char buffer[256];
 		strerror_r(errno, buffer, 256);
