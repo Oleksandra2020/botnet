@@ -15,64 +15,90 @@
 
 enum ERROR_CODES {
 	NO_EXECUTION_MODE = -1,
-	MISSING_SERVER_PORT = -2,
-	MISSING_LOCAL_PORT = -3,
-	MISSING_SERVER_IP = -4,
+	INCORRECT_EXECUTION_MODE = -2,
+	MISSING_CONNECTION_ARGUMENTS = -3,
 };
 
+void get_help_info();
+
 namespace io = boost::asio;
-int main(int argc, char* argv[]) {
+
+int main(int argc, char *argv[]) {
 	if (argc < 2) {
 		ERROR("Mode of execution not specified!");
 		return NO_EXECUTION_MODE;
 	}
 
-	if (std::string(argv[1]) == "server") {
-		PRINT("Running as a server", "...")
+	std::string execution_mode(argv[1]);
+	std::string local_port;
+	std::string server_ip;
+	std::string server_port;
 
+	if (execution_mode == "server") {
 		if (argc < 3) {
 			ERROR("Local port for server not specified!");
-			return MISSING_LOCAL_PORT;
+			get_help_info();
+			return MISSING_CONNECTION_ARGUMENTS;
 		}
 
-		io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-		server tcp_server(io_context, atoi(argv[2]));
+	} else if (execution_mode == "client" || execution_mode == "admin") {
+		if (argc < 5) {
+			ERROR("Incorrect arguments !!");
+			get_help_info();
+			return MISSING_CONNECTION_ARGUMENTS;
+		}
+
+		local_port = argv[2];
+		server_ip = argv[3];
+		server_port = argv[4];
+
+	} else {
+		ERROR("Invalid execution mode!!");
+		get_help_info();
+		return INCORRECT_EXECUTION_MODE;
+	}
+	local_port = argv[2];
+
+	// Starting the appliation
+
+	io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
+
+	if (execution_mode == "server") {
+		PRINT("Running as a server", "...")
+
+		server tcp_server(io_context, atoi(local_port.c_str()));
 		tcp_server.start();
 		io_context.run();
-		return 0;
-	}
 
-	if (argc < 3) {
-		ERROR("IP address for server not specified!");
-		return MISSING_SERVER_IP;
-	}
-	if (argc < 4) {
-		ERROR("Public port for server not specified!");
-		return MISSING_LOCAL_PORT;
-	}
-	if (argc < 5) {
-		ERROR("Local port for client/admin not specified!");
-		return MISSING_SERVER_PORT;
-	}
-
-	if (std::string(argv[1]) == "client") {
+	} else if (execution_mode == "client") {
 		PRINT("Running as a client", "...")
 
-		victims victims(THREAD_NUM, "", argv[2]);
+		victims victims(THREAD_NUM, "", local_port.c_str());
 
-		io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-		client client_tcp(io_context, atoi(argv[4]), argv[2], atoi(argv[3]), &victims);
+		client client_tcp(io_context, atoi(local_port.c_str()), server_ip, atoi(server_port.c_str()), &victims);
 		client_tcp.start();
 		io_context.run();
-		return 0;
-	}
-	if (std::string(argv[1]) == "admin") {
+
+	} else if (execution_mode == "admin") {
 		PRINT("Running as an admin", "...")
 
-		io::io_context io_context(BOOST_ASIO_CONCURRENCY_HINT_SAFE);
-		manager admin_tcp(io_context, atoi(argv[4]), argv[2], atoi(argv[3]));
+		manager admin_tcp(io_context, atoi(local_port.c_str()), server_ip, atoi(server_port.c_str()));
 		admin_tcp.start();
 		io_context.run();
-		return 0;
 	}
+
+	return 0;
+}
+
+void get_help_info() {
+	std::cout << "\n\nArguments info:" << std::endl;
+	std::cout << "* Starting the server:\n"
+		     "  server [local port to run on]\n"
+		  << std::endl;
+	std::cout << "* Starting the client:\n"
+		     "  client [local port to run on] [server ip address] [server external port]\n"
+		  << std::endl;
+	std::cout << "* Starting the admin:\n"
+		     "  admin [local port to run on] [server ip address] [server external port]\n"
+		  << std::endl;
 }

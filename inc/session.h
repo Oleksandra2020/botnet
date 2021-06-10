@@ -1,7 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#define BUFFER_SIZE_RESERVE 8576  // bytes
+#define BUFFER_SIZE_RESERVE 18576  // bytes
 
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -10,6 +10,7 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write_at.hpp>
+#include <boost/bind/bind.hpp>
 #include <future>
 #include <iostream>
 #include <istream>
@@ -27,7 +28,7 @@ class session {
 	using on_err_callback = std::function<void()>;
 
     public:
-	session(tcp::socket&&, io::io_context&, size_t);
+	session(tcp::socket&&, io::io_context&, int);
 	~session();
 
 	void start(on_msg_callback&& onMsg);
@@ -35,12 +36,11 @@ class session {
 	void send(std::string const&);
 
 	void read();
-	size_t id_;
-	bool idle_;
-	int threads_;
+	int id_;
 	int inactive_timeout_count_;
 	tcp::endpoint endpoint_;
 	std::string ip_;
+    bool disconnected_;
 
     private:
 	void write();

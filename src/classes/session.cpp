@@ -1,10 +1,13 @@
 #include "session.h"
 
-session::session(tcp::socket&& sock, io::io_service& io_context, size_t id) : socket_(std::move(sock)), io_context_(io_context) {
+#include <string>
+
+session::session(tcp::socket&& sock, io::io_service& io_context, int id) : socket_(std::move(sock)), io_context_(io_context) {
 	id_ = id;
 	ip_ = "";
+	disconnected_ = false;
 	inactive_timeout_count_ = 1;
-	boost::asio::streambuf::mutable_buffers_type bufs = buffer_.prepare(BUFFER_SIZE_RESERVE);
+    boost::asio::streambuf::mutable_buffers_type bufs = buffer_.prepare(BUFFER_SIZE_RESERVE);
 }
 
 session::~session() { stop(); }
@@ -23,26 +26,32 @@ void session::read() {
 void session::onRead(err error_code, std::size_t bytes_transferred) {
 	error_code_ = error_code;
 	if (!error_code) {
-		std::string output;
-		std::stringstream output_stream;
-
-		output.resize(bytes_transferred);
-		output_stream << std::istream(&buffer_).rdbuf();
-		output_stream.read(&output[0], bytes_transferred);
-		output = output.substr(0, output.size() - 1);
-		buffer_.consume(bytes_transferred);
-
 		endpoint_ = socket_.remote_endpoint(error_code);
-		if (ip_ == "") {
+		if (ip_.empty()) {
 			std::ostringstream ip_stream;
 			ip_stream << endpoint_;
 			ip_ = ip_stream.str();
 		}
 
-		on_message_callback_(output, this);
-		read();
+		std::istream is(&buffer_);
+		std::string line;
+		while (is) {
+			std::getline(is, line, '\n');
+			// PRINT("LINE RAW: ", line);
+
+			if (is) {
+				on_message_callback_(line, this);
+			}
+		};
+
+		buffer_.consume(bytes_transferred);
+
+		boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+		timer.async_wait(boost::bind(&session::read, this));
+
 	} else {
-		socket_.close(error_code);
+		// PRINT("READ ERROR OCCURED: ", error_code.message());
+		stop();
 	}
 }
 
@@ -50,7 +59,8 @@ void session::send(std::string const& data) {
 	bool idle = msg_queue_.empty();
 	msg_queue_.push(data);
 	if (idle) {
-		write();
+		boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+		timer.async_wait(boost::bind(&session::write, this));
 	}
 }
 
@@ -67,7 +77,8 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 		msg_queue_.pop();
 
 		if (!msg_queue_.empty()) {
-			write();
+			boost::asio::steady_timer timer(io_context_, std::chrono::steady_clock::now() + std::chrono::seconds(0));
+			timer.async_wait(boost::bind(&session::write, this));
 		}
 	} else {
 		stop();
@@ -75,6 +86,10 @@ void session::onWrite(err error_code, std::size_t bytes_transferred) {
 }
 
 void session::stop() {
-	// io_context_.post([this]() { socket_.close(error_code_); });
+	if (disconnected_) {
+		return;
+	}
+	// PRINT("DISCONNECTING [" + ip_ + "] due to:", error_code_.message());
+	disconnected_ = true;
 	socket_.close(error_code_);
 }

