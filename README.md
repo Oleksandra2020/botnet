@@ -29,9 +29,9 @@ Project Link: [https://github.com/Oleksandra2020/botnet](https://github.com/Olek
 This project is the distributed network of computers running this program. Clients or bots are connected to the single server and are getting the commands from the the bot-manager through the server. They could perform http & tcp flood attacks on specified IP addresses of victim.
 
 ### Example
-Example of ~30 clients connected to the server (in local network) that are viewed & controlled by the bot-manager.
+Example of 10001 clients connected to the server (in local network) that are viewed & controlled by the bot-manager.
 
-![gif_example][example]
+![video_example](https://drive.google.com/drive/u/0/folders/1EjHKjHGEDBbz2bVZ-3RCXS3jlAS-VDSS)
 
 <!-- DEPENDENCIES -->
 ### Dependencies
